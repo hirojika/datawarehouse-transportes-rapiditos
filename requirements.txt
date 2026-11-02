@@ -1,0 +1,10 @@
+# Las versiones se fijan con `pip freeze > requirements.txt` después de instalar.
+pandas
+openpyxl
+sqlalchemy
+pymysql
+python-dotenv
+streamlit
+plotly
+pytest
+ruff
