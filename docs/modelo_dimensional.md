@@ -1,7 +1,7 @@
 # Modelo Dimensional — Transportes Rapiditos S.A.
 
 Fuente de verdad del diseño. Cualquier cambio al modelo se hace primero aquí y después en `sql/`.
-Estado: **propuesta consolidada para el Avance N°1** (diseñada en el chat del Project; pendiente de confirmación final del grupo).
+Estado: **aprobado para el Avance N°1** (02-11-2026). Cambio respecto de la propuesta original: la tabla de hechos se renombró de `fact_ventas` a `fact_venta` para cumplir la regla de nombres en singular.
 
 ## 1. Proceso de negocio
 
@@ -101,7 +101,7 @@ Jerarquía: comuna → ciudad → región → país → continente.
 | codigo_medio_pago | VARCHAR(20) | NOT NULL, UNIQUE | Llave natural |
 | nombre_medio_pago | VARCHAR(40) | NOT NULL | efectivo, débito, crédito, transferencia, billetera digital |
 
-## 5. Tabla de hechos: fact_ventas
+## 5. Tabla de hechos: fact_venta
 
 | Columna | Tipo | Restricción | Tipo de medida / rol |
 |---|---|---|---|
@@ -125,6 +125,11 @@ Jerarquía: comuna → ciudad → región → país → continente.
 
 Supuesto: montos en pesos chilenos (CLP).
 
+Notas para el ETL (Fase 2):
+- `dim_tiempo.dia_semana` usa 1 = lunes … 7 = domingo. En MariaDB equivale a `WEEKDAY(fecha) + 1` (no a `DAYOFWEEK`, que parte en domingo).
+- `dim_zona.comuna` es NOT NULL: para zonas sin comuna (destinos internacionales) el ETL carga `'No aplica'`.
+- El rango etario para el análisis por edad se calcula desde `edad_cliente` en el cubo o el dashboard.
+
 ## 6. Cálculos y KPI derivados
 
 | KPI | Cálculo |
@@ -144,21 +149,21 @@ Supuesto: montos en pesos chilenos (CLP).
 - Nombres en singular, `snake_case` y minúsculas en todas las tablas y columnas.
 - PK: `id_<entidad>`. Llave natural: `codigo_<entidad>`.
 - FK: mismo nombre que la PK referenciada; en dimensiones de rol se agrega sufijo (`id_zona_origen`, `id_zona_destino`).
-- Restricciones: `pk_<tabla>`, `fk_<tabla>_<columna>`, `uq_<tabla>_<columna>`.
+- Restricciones: `fk_<tabla>_<columna>`, `uq_<tabla>_<columna>`. La PK se declara sin nombre: MariaDB la llama siempre `PRIMARY` y nombrarla genera el aviso #1280 (decidido el 02-11-2026, antes se usaba `pk_<tabla>`).
 
 ## 8. Diagrama
 
 ```mermaid
 erDiagram
-    fact_ventas }o--|| dim_tiempo : id_tiempo
-    fact_ventas }o--|| dim_cliente : id_cliente
-    fact_ventas }o--|| dim_servicio : id_servicio
-    fact_ventas }o--|| dim_zona : id_zona_origen
-    fact_ventas }o--|| dim_zona : id_zona_destino
-    fact_ventas }o--|| dim_canal_venta : id_canal_venta
-    fact_ventas }o--|| dim_medio_pago : id_medio_pago
+    fact_venta }o--|| dim_tiempo : id_tiempo
+    fact_venta }o--|| dim_cliente : id_cliente
+    fact_venta }o--|| dim_servicio : id_servicio
+    fact_venta }o--|| dim_zona : id_zona_origen
+    fact_venta }o--|| dim_zona : id_zona_destino
+    fact_venta }o--|| dim_canal_venta : id_canal_venta
+    fact_venta }o--|| dim_medio_pago : id_medio_pago
 
-    fact_ventas {
+    fact_venta {
         bigint id_venta PK
         int id_tiempo FK
         int id_cliente FK
@@ -235,5 +240,5 @@ erDiagram
 ## 9. Decisiones pendientes del grupo
 
 - Perfil de usuario de la reportería: propuesta **táctico (gerencia comercial/marketing)**. Alternativa: ejecutivo.
-- Formato del informe: Word o LaTeX con plantilla UTEM.
+- ~~Formato del informe~~: decidido LaTeX (02-11-2026).
 - Fuente de datos para poblar el DWH (Fase 2): datasets públicos, datos sintéticos generados con Python, o una combinación (el enunciado permite datasets públicos de la web).

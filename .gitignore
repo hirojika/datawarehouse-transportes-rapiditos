@@ -12,3 +12,7 @@ informe/*.lof
 informe/*.lot
 informe/*.bbl
 informe/*.blg
+informe/*.fls
+informe/*.fdb_latexmk
+informe/*.synctex.gz
+informe/*.xdv

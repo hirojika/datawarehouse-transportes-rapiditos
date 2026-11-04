@@ -25,7 +25,21 @@ Levantar XAMPP:
 - Linux: `sudo /opt/lampp/lampp start` (detener antes Apache/MariaDB del sistema si están corriendo).
 - Windows: XAMPP Control Panel → Start en Apache y MySQL.
 
-Crear el DWH: abrir phpMyAdmin (`http://localhost/phpmyadmin`), pestaña SQL, y ejecutar `sql/01_ddl.sql`.
+Crear el DWH: abrir phpMyAdmin (`http://localhost/phpmyadmin`), pestaña SQL, y ejecutar `sql/01_ddl.sql`. Para verificar la estructura, ejecutar `sql/99_validacion.sql`.
+
+Pruebas y estilo (con XAMPP activo y el venv activado):
+
+```bash
+pytest -v        # ejecuta 01_ddl.sql sobre dwh_rapiditos_test (nunca toca dwh_rapiditos)
+ruff check .
+```
+
+Si al ejecutar `01_ddl.sql` aparecen `#1558 Column count of mysql.proc is wrong` y `#1545 Failed to open mysql.event`, las tablas de sistema de MariaDB que trae XAMPP están desactualizadas (no es un error del script). Se arregla una sola vez, con XAMPP corriendo:
+
+- Linux: `sudo /opt/lampp/bin/mysql_upgrade -u root` y luego `sudo /opt/lampp/lampp restartmysql`.
+- Windows: `C:\xampp\mysql\bin\mysql_upgrade.exe -u root` y luego Stop/Start de MySQL en el Control Panel.
+
+Informe (LaTeX), desde la carpeta `informe/`: `latexmk -xelatex informe.tex` (también compila con `-lualatex` o `-pdf`).
 
 Dashboard: `streamlit run dashboard/app.py` → `http://localhost:8501`.
 

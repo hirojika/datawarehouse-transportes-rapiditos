@@ -1,0 +1,129 @@
+% =============================================================================
+% Sección: Caso de Negocio (nombre literal del enunciado)
+% =============================================================================
+\section{Caso de Negocio}
+
+\subsection{Enunciado del caso}
+
+El proyecto semestral plantea el desafío de construir una Arquitectura de
+Solución BI para un problema real. El caso propuesto es el siguiente:
+
+\begin{quote}
+  \itshape
+  «Una compañía internacional de transportes decide fusionar sus líneas de
+  negocio en términos de información, para tener una vista única de sus
+  clientes».
+\end{quote}
+
+La empresa es \textbf{Transportes Rapiditos S.A.}, que opera seis líneas de
+negocio. Cada línea vende servicios distintos (pasajes, viajes, envíos y
+pedidos), por lo que la información de un mismo cliente queda repartida entre
+las líneas. El caso pide integrar esa información para analizar al cliente de
+manera única, sin importar la línea en que compre.
+
+\subsection{Líneas de negocio}
+
+El enunciado define las siguientes líneas de negocio. La tabla indica además
+el medio de transporte y el tipo de servicio principal con que cada línea se
+representa en el modelo dimensional (atributos de la dimensión
+\bd{dim_servicio}).
+
+\begin{table}[H]
+  \centering
+  \caption{Líneas de negocio de Transportes Rapiditos S.A.}
+  \label{tab:lineas_negocio}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    \textbf{Línea de negocio} & \textbf{Medio de transporte} & \textbf{Tipo de servicio} \\
+    \midrule
+    Buses InterUrbanos Rapiditos       & Bus             & Pasajeros \\
+    Trenes Rapiditos                   & Tren            & Pasajeros \\
+    Radio Taxis Rapiditos              & Taxi            & Pasajeros \\
+    Logística y Distribución Rapiditos & Camión          & Carga \\
+    Aerolíneas Rapiditos               & Avión           & Pasajeros \\
+    URapid Delivery                    & Moto/bicicleta  & Carga \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Objetivo}
+
+El objetivo definido en el enunciado es:
+
+\begin{quote}
+  \itshape
+  «Determinar qué tipos de clientes tiene la compañía y su comportamiento
+  anual, en base a los últimos 3 años».
+\end{quote}
+
+El comportamiento se analiza según la compra, los medios de transporte, la
+zona y la edad, entre otras variables. A partir de este objetivo, la solución
+BI debe responder las siguientes preguntas de negocio:
+
+\begin{enumerate}[leftmargin=*]
+  \item ¿Qué tipos de clientes tiene la compañía (personas o empresas, por
+        género, rango de edad y lugar de residencia)?
+  \item ¿Cuánto compra cada tipo de cliente por año y cómo cambia ese monto en
+        los últimos tres años?
+  \item ¿Qué líneas de negocio y medios de transporte usa cada tipo de
+        cliente, y cuántos clientes compran en más de una línea?
+  \item ¿Desde qué zonas y hacia qué zonas se mueven los clientes?
+  \item ¿Por qué canales compran los clientes y con qué medios de pago?
+\end{enumerate}
+
+\subsection{Consideraciones del enunciado}
+
+\begin{itemize}[leftmargin=*]
+  \item El modelamiento dimensional debe considerar un modelo tipo estrella.
+  \item La reportería debe presentarse para un perfil de usuario:
+        operacional/táctico o ejecutivo.
+  \item Las recomendaciones deben estar asociadas al negocio del caso.
+  \item Se pueden usar datasets públicos disponibles en la web.
+\end{itemize}
+
+\subsection{Alcance del Datawarehouse}
+
+El Datawarehouse \bd{dwh_rapiditos} tiene el siguiente alcance:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Proceso de negocio:} compras de servicios que realizan los
+        clientes en las seis líneas de negocio.
+  \item \textbf{Grano:} una fila por cada transacción de compra de un cliente
+        por un servicio de una línea de negocio, en una fecha. Por ejemplo, un
+        pasaje de bus, tren o avión; un viaje de taxi; un envío de logística o
+        un pedido de delivery.
+  \item \textbf{Vista única del cliente:} cada cliente se identifica con una
+        llave natural común a todas las líneas (RUT o documento), lo que
+        permite consolidar sus compras en una sola dimensión
+        (\bd{dim_cliente}).
+  \item \textbf{Modelo:} un esquema estrella con una tabla de hechos
+        (\bd{fact_venta}) y seis dimensiones: tiempo, cliente, servicio, zona
+        (como origen y destino), canal de venta y medio de pago.
+  \item \textbf{Período:} los últimos tres años. Los años exactos se fijan al
+        definir la fuente de datos, en el Avance N°2.
+  \item \textbf{Moneda:} los montos se expresan en pesos chilenos (CLP).
+  \item \textbf{Motor:} MariaDB, administrado con XAMPP y phpMyAdmin.
+\end{itemize}
+
+Este Avance N°1 incluye la definición del modelo multidimensional y el
+script SQL que crea su estructura, \emph{sin datos}. El poblamiento mediante
+ETL, el cubo, los KPI y el dashboard de visualización se desarrollan en los
+avances siguientes, de acuerdo con la planificación de la Tabla~\ref{tab:entregas}.
+
+\begin{table}[H]
+  \centering
+  \caption{Planificación de entregas del proyecto}
+  \label{tab:entregas}
+  \begin{tabularx}{\linewidth}{@{}llX@{}}
+    \toprule
+    \textbf{Entrega} & \textbf{Fecha} & \textbf{Contenido} \\
+    \midrule
+    Avance N°1 & 05-11-2026 & Caso de negocio, modelo multidimensional
+                              estrella y script SQL de creación (sin datos). \\
+    Avance N°2 & 19-11-2026 & Fuentes de información, ETL y poblamiento del
+                              Datawarehouse. \\
+    Avance N°3 & 10-12-2026 & Cubo, KPI, dashboard de visualización,
+                              recomendaciones y presentación. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}

@@ -1,0 +1,101 @@
+% =============================================================================
+% Informe de Proyecto BI — Transportes Rapiditos S.A. (Grupo 1)
+% Inteligencia de Negocios (INFB8101), Sección 412, UTEM, II Semestre 2026
+%
+% Compilar desde la carpeta informe/ con cualquiera de estos motores:
+%   latexmk -xelatex informe.tex     (motor previsto del proyecto)
+%   latexmk -lualatex informe.tex
+%   latexmk -pdf informe.tex         (pdfLaTeX)
+% Las capturas se leen desde ../docs/capturas/ y el esquema desde
+% ../docs/diagramas/. Si una imagen todavía no existe, se muestra un recuadro
+% con el nombre del archivo pendiente.
+% =============================================================================
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+\fi
+\usepackage[spanish,es-tabla,es-noshorthands]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+% Nombres de tablas y columnas en monoespaciado, sin escapar los guiones bajos
+\newcommand{\bd}[1]{\texttt{\detokenize{#1}}}
+
+% \captura[ancho]{archivo}{pie de figura}: incluye docs/capturas/<archivo> si existe
+\newcommand{\captura}[3][\linewidth]{%
+  \begin{figure}[H]
+    \centering
+    \IfFileExists{../docs/capturas/#2}{%
+      \includegraphics[width=#1,height=0.42\textheight,keepaspectratio]{../docs/capturas/#2}%
+    }{%
+      \fbox{\parbox{0.8\linewidth}{\centering\vspace{2.5em}%
+        Captura pendiente: \bd{docs/capturas/#2}\vspace{2.5em}}}%
+    }
+    \caption{#3}
+  \end{figure}%
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Transportes Rapiditos S.A.}
+\rhead{Proyecto BI — Grupo 1}
+\cfoot{\thepage}
+
+\begin{document}
+
+% ----------------------------------------------------------------------------
+% Portada
+% ----------------------------------------------------------------------------
+\begin{titlepage}
+  \centering
+  \IfFileExists{img/logo_utem.png}{\includegraphics[width=0.35\linewidth]{img/logo_utem.png}\par\vspace{1.5cm}}{}
+  {\large Universidad Tecnológica Metropolitana\par}
+  \vspace{0.3cm}
+  {\large Inteligencia de Negocios (INFB8101) — Sección 412\par}
+  \vspace{3cm}
+  {\Huge\bfseries Informe de Proyecto BI\par}
+  \vspace{0.6cm}
+  {\LARGE Transportes Rapiditos S.A.\par}
+  \vspace{0.4cm}
+  {\Large Avance N°1\par}
+  \vfill
+  \begin{tabular}{rl}
+    \textbf{Integrantes:} & Ignacio Ahumada Poque \\
+                          & Leonardo Solís Ortiz \\
+                          & Vicente Fuentes Rodríguez \\
+                          & Gabriel García Vega \\[0.3cm]
+    \textbf{Profesor:}    & Luis Cofré B. \\[0.3cm]
+    \textbf{Fecha:}       & 05 de noviembre de 2026 \\
+  \end{tabular}
+  \vspace{1.5cm}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% Secciones del informe con los nombres literales del enunciado.
+\input{secciones/caso_de_negocio}
+% \input{secciones/fuentes_de_informacion}          % Avance N°2
+% \input{secciones/arquitectura_propuesta}          % Avance N°2
+% \input{secciones/estadisticas_de_procesamiento}   % Avance N°2
+\input{secciones/modelamiento_dimensional}
+% \input{secciones/recomendaciones}                 % Avance N°3
+
+\end{document}
