@@ -1,12 +1,14 @@
 % =============================================================================
-% Sección: Caso de Negocio (nombre literal del enunciado)
+% Capítulo 1: Caso de Negocio (nombre literal del enunciado)
 % =============================================================================
 \section{Caso de Negocio}
+\label{sec:caso}
 
-\subsection{Enunciado del caso}
+\subsection{Contexto}
 
-El proyecto semestral plantea el desafío de construir una Arquitectura de
-Solución BI para un problema real. El caso propuesto es el siguiente:
+El proyecto semestral de la asignatura plantea construir una Arquitectura de
+Solución de Inteligencia de Negocios (BI) para un caso de negocio. El caso
+asignado es el siguiente:
 
 \begin{quote}
   \itshape
@@ -15,115 +17,415 @@ Solución BI para un problema real. El caso propuesto es el siguiente:
   clientes».
 \end{quote}
 
-La empresa es \textbf{Transportes Rapiditos S.A.}, que opera seis líneas de
-negocio. Cada línea vende servicios distintos (pasajes, viajes, envíos y
-pedidos), por lo que la información de un mismo cliente queda repartida entre
-las líneas. El caso pide integrar esa información para analizar al cliente de
-manera única, sin importar la línea en que compre.
+La compañía es \textbf{Transportes Rapiditos S.A.}, que transporta pasajeros y
+carga por tierra y aire mediante seis líneas de negocio. Cada línea vende un
+servicio distinto: pasajes de bus, tren y avión, viajes de taxi, envíos de
+logística y pedidos de delivery. Como cada línea registra sus ventas en su
+propio sistema, la información de un mismo cliente queda repartida entre ellas,
+y la compañía no puede responder preguntas tan básicas como cuántos clientes
+tiene en total o cuántos de ellos usan más de un servicio.
 
-\subsection{Líneas de negocio}
+Este problema es habitual en las organizaciones con varias unidades de negocio.
+Kimball y Ross~\cite{kimball2013} proponen resolverlo con un Datawarehouse cuyas
+dimensiones sean \emph{conformadas}, es decir, que signifiquen lo mismo para
+todas las áreas que las usan. En este caso, la dimensión conformada central es
+el cliente: un mismo cliente debe identificarse igual cuando compra un pasaje de
+bus, pide un taxi o envía una carga.
 
-El enunciado define las siguientes líneas de negocio. La tabla indica además
-el medio de transporte y el tipo de servicio principal con que cada línea se
-representa en el modelo dimensional (atributos de la dimensión
-\bd{dim_servicio}).
+El contexto chileno muestra la misma fragmentación. Las estadísticas públicas
+del sector se publican por modo de transporte y en forma agregada: el Instituto
+Nacional de Estadísticas (INE) informa el transporte interurbano de pasajeros
+por carretera~\cite{ine_etranp}, la Empresa de los Ferrocarriles del Estado
+(EFE) informa los pasajeros de sus servicios en su memoria
+anual~\cite{efe_memoria} y la Junta de Aeronáutica Civil (JAC) publica el
+tráfico aéreo por ruta y operador~\cite{jac}. Ninguna de ellas describe al
+cliente, porque esa información solo existe dentro de cada operador. Por eso la
+vista única del cliente requiere que la compañía integre sus propios datos.
+
+Los clientes del proyecto residen en Chile. El Censo de Población y Vivienda
+2024 del INE censó a 18.480.432 personas en el país~\cite{ine_censo_resultados}, y sus
+distribuciones por comuna, sexo y edad son la base con que se generan los
+clientes del proyecto~\cite{ine_censo2024}, como se explica en la
+Sección~\ref{sec:fuentes}.
+
+\subsection{Organización y Líneas de Negocio}
+
+El enunciado define las seis líneas de negocio de la
+Tabla~\ref{tab:lineas_negocio}. La tabla indica además el medio de transporte,
+el tipo de servicio y la unidad de venta con que cada línea se representa en el
+modelo dimensional (dimensión \bd{dim_servicio}).
 
 \begin{table}[H]
   \centering
   \caption{Líneas de negocio de Transportes Rapiditos S.A.}
   \label{tab:lineas_negocio}
-  \begin{tabular}{@{}lll@{}}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}Xlll@{}}
     \toprule
-    \textbf{Línea de negocio} & \textbf{Medio de transporte} & \textbf{Tipo de servicio} \\
+    \textbf{Línea de negocio} & \textbf{Medio de transporte}
+      & \textbf{Tipo de servicio} & \textbf{Unidad de venta} \\
     \midrule
-    Buses InterUrbanos Rapiditos       & Bus             & Pasajeros \\
-    Trenes Rapiditos                   & Tren            & Pasajeros \\
-    Radio Taxis Rapiditos              & Taxi            & Pasajeros \\
-    Logística y Distribución Rapiditos & Camión          & Carga \\
-    Aerolíneas Rapiditos               & Avión           & Pasajeros \\
-    URapid Delivery                    & Moto/bicicleta  & Carga \\
+    Buses InterUrbanos Rapiditos       & Bus            & Pasajeros & Pasaje \\
+    Trenes Rapiditos                   & Tren           & Pasajeros & Pasaje \\
+    Radio Taxis Rapiditos              & Taxi           & Pasajeros & Viaje \\
+    Logística y Distribución Rapiditos & Camión         & Carga     & Envío \\
+    Aerolíneas Rapiditos               & Avión          & Pasajeros & Pasaje \\
+    URapid Delivery                    & Moto/bicicleta & Carga     & Pedido \\
     \bottomrule
-  \end{tabular}
+  \end{tabularx}
 \end{table}
 
-\subsection{Objetivo}
+El enunciado no describe la organización interna de la compañía. Para
+situar la solución, el grupo supone la estructura de la
+Figura~\ref{fig:organizacion}: una gerencia general de la que dependen las
+gerencias de cada línea de negocio, una gerencia comercial y de marketing
+transversal, que es la usuaria de la solución BI (Sección~\ref{sec:perfil}), y
+una gerencia de tecnología, responsable de los sistemas de cada línea y del
+Datawarehouse.
 
-El objetivo definido en el enunciado es:
+\begin{figure}[H]
+  \centering
+  \caption{Estructura organizacional supuesta de Transportes Rapiditos S.A.}
+  \label{fig:organizacion}
+  \contorno[6pt]{%
+  \begin{tikzpicture}[
+      caja/.style={draw=azulutem, thick, rounded corners=2pt, align=flush center,
+                   font=\linespread{1}\footnotesize, minimum height=1.0cm, inner sep=3pt,
+                   fill=azulutem!6},
+      linea/.style={draw=azulutem!70, thick, rounded corners=2pt,
+                    align=flush center, font=\linespread{1}\scriptsize, minimum height=1.05cm,
+                    text width=2.15cm, inner sep=2pt},
+      usuario/.style={caja, draw=verdeutem!80!black, fill=verdeutem!15},
+      conector/.style={draw=gray!70, thick}]
+    \node[caja, text width=4cm] (gg) at (0,0) {Gerencia General};
+    \node[usuario, text width=4.2cm] (com) at (-5.2,-1.7)
+      {Gerencia Comercial\\y de Marketing\\\textit{(usuaria de la solución BI)}};
+    \node[caja, text width=4.2cm] (lin) at (0,-1.7) {Gerencias de\\Línea de Negocio};
+    \node[caja, text width=4.2cm] (ti) at (5.2,-1.7) {Gerencia de Tecnología\\\textit{(sistemas y Datawarehouse)}};
+    \foreach \nombre/\texto [count=\i] in {
+        bus/Buses InterUrbanos Rapiditos,
+        tren/Trenes Rapiditos,
+        taxi/Radio Taxis Rapiditos,
+        log/Logística y Distribución Rapiditos,
+        aer/Aerolíneas Rapiditos,
+        del/URapid Delivery} {
+      \node[linea] (\nombre) at ({(\i-3.5)*2.45},-3.75) {\texto};
+    }
+    \draw[conector] (gg.south) -- ++(0,-0.35) coordinate (b1);
+    \draw[conector] (com.north) |- (b1) -| (ti.north);
+    \draw[conector] (b1) -- (lin.north);
+    \draw[conector] (lin.south) -- ++(0,-0.45) coordinate (b2);
+    \foreach \nombre in {bus,tren,taxi,log,aer,del} {
+      \draw[conector] (b2) -| (\nombre.north);
+    }
+  \end{tikzpicture}}
+  \nota{Elaboración propia. La estructura es un supuesto del grupo, porque el
+  enunciado no describe la organización interna de la compañía.}
+\end{figure}
 
-\begin{quote}
-  \itshape
-  «Determinar qué tipos de clientes tiene la compañía y su comportamiento
-  anual, en base a los últimos 3 años».
-\end{quote}
+Se asume además que cada línea de negocio opera con su propio sistema de
+ventas, con sus propios códigos de cliente, de zona y de servicio. Este supuesto
+es el origen de las problemáticas de la Sección~\ref{sec:problematicas}.
 
-El comportamiento se analiza según la compra, los medios de transporte, la
-zona y la edad, entre otras variables. A partir de este objetivo, la solución
-BI debe responder las siguientes preguntas de negocio:
+\subsection{Objetivos}
 
-\begin{enumerate}[leftmargin=*]
-  \item ¿Qué tipos de clientes tiene la compañía (personas o empresas, por
-        género, rango de edad y lugar de residencia)?
-  \item ¿Cuánto compra cada tipo de cliente por año y cómo cambia ese monto en
-        los últimos tres años?
-  \item ¿Qué líneas de negocio y medios de transporte usa cada tipo de
-        cliente, y cuántos clientes compran en más de una línea?
-  \item ¿Desde qué zonas y hacia qué zonas se mueven los clientes?
-  \item ¿Por qué canales compran los clientes y con qué medios de pago?
+\subsubsection{Objetivo General}
+
+Diseñar e implementar una Arquitectura de Solución de Inteligencia de Negocios
+que integre la información de las seis líneas de negocio de Transportes
+Rapiditos S.A. en una vista única del cliente, para determinar qué tipos de
+clientes tiene la compañía y su comportamiento anual en los últimos tres años
+(2023--2025), según su compra, los medios de transporte que usa, la zona y la
+edad, entre otras variables.
+
+\subsubsection{Objetivos Específicos}
+
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item Identificar y documentar una fuente de información pública para cada
+        línea de negocio, con su contenido, período, licencia y limitaciones.
+  \item Diseñar un modelo multidimensional tipo estrella, con el proceso de
+        negocio, el grano, las dimensiones y las medidas necesarias para el
+        objetivo, y una norma de nomenclatura aplicada a todo el modelo.
+  \item Implementar el Datawarehouse en PostgreSQL mediante un script SQL
+        idempotente que cree el modelo y sus reglas de integridad.
+  \item Desarrollar los procesos ETL en Apache Hop que extraigan, transformen
+        y carguen los datos de las seis líneas en el Datawarehouse sin errores
+        de consistencia, y registrar sus estadísticas de procesamiento.
+  \item Construir un cubo con las dimensiones, atributos y métricas
+        necesarios para calcular los indicadores clave (KPI) del objetivo.
+  \item Desarrollar un dashboard de visualización para el perfil táctico de
+        la gerencia comercial y de marketing.
+  \item Formular recomendaciones de negocio basadas en los resultados del
+        análisis.
 \end{enumerate}
 
-\subsection{Consideraciones del enunciado}
+\subsection{Problemáticas Identificadas}
+\label{sec:problematicas}
+
+A partir del enunciado y de los supuestos de la sección anterior, se
+identifican las problemáticas siguientes. Este avance las describe de forma
+cualitativa; su magnitud se medirá con los datos cargados en el Avance N°2.
+
+\subsubsection{Información del Cliente Fragmentada entre Líneas de Negocio}
+
+Cada línea conoce solo las compras que el cliente hace en ella. Un cliente que
+viaja en bus, toma taxis y pide delivery aparece como tres clientes distintos,
+y ninguna gerencia ve el total de lo que compra ni la combinación de servicios
+que usa.
+
+\subsubsection{Ausencia de un Identificador Común del Cliente}
+
+Los sistemas de las líneas no comparten un código de cliente. Sin una llave
+común no es posible unir las compras de una misma persona o empresa, ni contar
+cuántos clientes distintos tiene la compañía.
+
+\subsubsection{Datos Heterogéneos entre Líneas}
+
+Las líneas registran sus datos con criterios distintos, como ocurre también
+con las fuentes públicas elegidas para el proyecto (Sección~\ref{sec:fuentes}):
 
 \begin{itemize}[leftmargin=*]
-  \item El modelamiento dimensional debe considerar un modelo tipo estrella.
-  \item La reportería debe presentarse para un perfil de usuario:
-        operacional/táctico o ejecutivo.
-  \item Las recomendaciones deben estar asociadas al negocio del caso.
-  \item Se pueden usar datasets públicos disponibles en la web.
+  \item \textbf{Zonas:} cada línea usa su propia división geográfica
+        (terminales, estaciones, zonas de taxi, aeropuertos o ciudades).
+  \item \textbf{Monedas y unidades:} los montos están en distintas monedas, y
+        las distancias y los pesos, en distintas unidades (millas o
+        kilómetros; gramos o kilogramos).
+  \item \textbf{Codificaciones:} los canales de venta y los medios de pago se
+        nombran de forma diferente en cada sistema.
+  \item \textbf{Granularidad temporal:} algunas líneas registran cada
+        transacción con fecha y hora, y otras solo publican totales mensuales
+        o trimestrales.
 \end{itemize}
 
-\subsection{Alcance del Datawarehouse}
+\subsubsection{Ausencia de una Visión Anual Consolidada}
 
-El Datawarehouse \bd{dwh_rapiditos} tiene el siguiente alcance:
+Sin datos integrados, la compañía no puede comparar el comportamiento de sus
+clientes de un año a otro: si crecen o caen sus compras, si cambian de medio
+de transporte o de canal, o en qué meses se concentra la demanda.
+
+\subsubsection{Decisiones Comerciales sin Segmentación de Clientes}
+
+Sin conocer los tipos de clientes, las campañas, los descuentos y las ofertas
+cruzadas entre líneas se diseñan sin saber a quién se dirigen ni qué
+segmentos generan más ventas.
+
+La Tabla~\ref{tab:problematicas} resume cada problemática, su consecuencia y
+el componente de la solución que la aborda.
+
+\begin{table}[H]
+  \centering
+  \caption{Problemáticas identificadas y respuesta de la solución BI}
+  \label{tab:problematicas}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.7cm}
+                                  >{\raggedright\arraybackslash}X
+                                  >{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Problemática} & \textbf{Consecuencia} & \textbf{Respuesta de la solución} \\
+    \midrule
+    Información del cliente fragmentada
+      & No se conoce el total de compras de cada cliente
+      & Tabla de hechos única (\bd{fact_venta}) con las ventas de las seis líneas \\
+    Sin identificador común
+      & No se pueden contar ni unir los clientes entre líneas
+      & Dimensión \bd{dim_cliente} con una llave natural común (\bd{codigo_cliente}) \\
+    Datos heterogéneos
+      & Las cifras de las líneas no son comparables
+      & ETL que normaliza zonas, monedas (CLP), unidades y catálogos \\
+    Sin visión anual consolidada
+      & No se observa la evolución de los clientes entre 2023 y 2025
+      & Dimensión \bd{dim_tiempo} con jerarquía hasta el año, y KPI anuales \\
+    Decisiones sin segmentación
+      & Campañas y ofertas sin un público objetivo
+      & Cubo y dashboard por tipo de cliente, edad, zona, línea y canal \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Preguntas de Negocio que Orientan la Solución}
+\label{sec:preguntas}
+
+El objetivo general se descompone en las preguntas de negocio de la
+Tabla~\ref{tab:preguntas}, agrupadas por las variables que menciona el
+enunciado. La última columna indica qué elementos del modelo dimensional
+(Sección~\ref{sec:modelo}) permiten responder cada pregunta.
+
+\begin{table}[H]
+  \centering
+  \caption{Preguntas de negocio y elementos del modelo que las responden}
+  \label{tab:preguntas}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.9cm}
+                                  c
+                                  >{\raggedright\arraybackslash}X
+                                  >{\raggedright\arraybackslash}p{4.4cm}@{}}
+    \toprule
+    \textbf{Tema} & \textbf{N°} & \textbf{Pregunta} & \textbf{Elementos del modelo} \\
+    \midrule
+    Tipos de clientes & P1
+      & ¿Qué tipos de clientes tiene la compañía según tipo (persona o
+        empresa), género, rango etario y región de residencia?
+      & \bd{dim_cliente}, \bd{edad_cliente} \\
+      & P2 & ¿Qué proporción de los clientes compra en más de una línea de
+        negocio?
+      & \bd{dim_cliente}, \bd{dim_servicio} \\
+    \midrule
+    Comportamiento de compra anual & P3
+      & ¿Cuánto compra cada tipo de cliente por año y cómo evoluciona entre
+        2023 y 2025?
+      & \bd{dim_tiempo}, \bd{dim_cliente}, \bd{monto_neto} \\
+      & P4 & ¿Con qué frecuencia compra cada tipo de cliente y cuál es su
+        ticket promedio?
+      & \bd{dim_cliente}, \bd{monto_neto}, conteo de transacciones \\
+      & P5 & ¿En qué meses y trimestres se concentra la demanda de cada
+        línea?
+      & \bd{dim_tiempo}, \bd{dim_servicio}, \bd{cantidad} \\
+    \midrule
+    Medios de transporte & P6
+      & ¿Qué líneas de negocio y medios de transporte prefiere cada segmento
+        de clientes?
+      & \bd{dim_servicio}, \bd{dim_cliente} \\
+    \midrule
+    Zona & P7
+      & ¿Desde qué zonas y hacia qué zonas se mueven los clientes o envían
+        sus cargas?
+      & \bd{dim_zona} (origen y destino) \\
+      & P8 & ¿Cómo varía el gasto según la región de residencia del cliente?
+      & \bd{dim_cliente}, \bd{monto_neto} \\
+    \midrule
+    Edad & P9
+      & ¿Cómo cambia el comportamiento de compra según el rango etario?
+      & \bd{edad_cliente}, \bd{dim_servicio}, \bd{monto_neto} \\
+    \midrule
+    Canal y pago & P10
+      & ¿Por qué canales y con qué medios de pago compra cada tipo de
+        cliente?
+      & \bd{dim_canal_venta}, \bd{dim_medio_pago} \\
+      & P11 & ¿Qué nivel de descuento recibe cada segmento de clientes?
+      & \bd{monto_descuento}, \bd{monto_bruto} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Perfil de Usuario}
+\label{sec:perfil}
+
+El enunciado pide presentar la reportería para un perfil de usuario,
+operacional/táctico o ejecutivo. El grupo eligió el \textbf{perfil táctico},
+representado por la \textbf{gerencia comercial y de marketing}. La razón es que
+el objetivo del caso, conocer los tipos de clientes y su comportamiento anual,
+sirve sobre todo para decidir a qué segmentos dirigir campañas, descuentos y
+ofertas entre líneas, que son decisiones de mediano plazo propias de esa
+gerencia. Un perfil operacional necesitaría el detalle diario de cada línea, y
+uno ejecutivo, solo unos pocos indicadores globales; ninguno de los dos
+aprovecha la segmentación de clientes que pide el objetivo.
+
+\begin{table}[H]
+  \centering
+  \caption{Perfil de usuario de la reportería}
+  \label{tab:perfil}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.4cm}
+                                  >{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Aspecto} & \textbf{Descripción} \\
+    \midrule
+    Usuario & Gerencia comercial y de marketing: gerente, jefaturas de
+      marketing y analistas comerciales \\
+    Nivel de decisión & Táctico: planificación de mediano plazo (trimestral
+      y anual) \\
+    Decisiones que apoya & Segmentación de clientes, diseño de campañas,
+      política de descuentos, ofertas cruzadas entre líneas y priorización de
+      canales de venta \\
+    Frecuencia de consulta & Mensual, con cierres trimestrales y anuales \\
+    Nivel de detalle & Agregado por tipo de cliente, rango etario, zona,
+      línea de negocio, canal y período, con desglose hasta mes y región. No
+      requiere el detalle de cada transacción \\
+    Indicadores clave & Ventas netas, clientes activos, gasto anual por
+      cliente, frecuencia de compra, ticket promedio, clientes multilínea,
+      participación por línea y tasa de descuento
+      (Sección~\ref{sec:kpi}) \\
+    Herramienta & Dashboard web en Streamlit con filtros por año, línea de
+      negocio, tipo de cliente y zona \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Alcances y Limitaciones}
+
+\subsubsection{Alcances}
+
+El enunciado establece que el modelamiento dimensional debe ser tipo
+estrella, que la reportería se presenta para un perfil de usuario, que las
+recomendaciones deben estar asociadas al negocio del caso y que se pueden usar
+datasets públicos disponibles en la web. Dentro de ese marco, la solución tiene
+el siguiente alcance:
 
 \begin{itemize}[leftmargin=*]
   \item \textbf{Proceso de negocio:} compras de servicios que realizan los
         clientes en las seis líneas de negocio.
   \item \textbf{Grano:} una fila por cada transacción de compra de un cliente
-        por un servicio de una línea de negocio, en una fecha. Por ejemplo, un
-        pasaje de bus, tren o avión; un viaje de taxi; un envío de logística o
-        un pedido de delivery.
-  \item \textbf{Vista única del cliente:} cada cliente se identifica con una
-        llave natural común a todas las líneas (RUT o documento), lo que
-        permite consolidar sus compras en una sola dimensión
-        (\bd{dim_cliente}).
-  \item \textbf{Modelo:} un esquema estrella con una tabla de hechos
-        (\bd{fact_venta}) y seis dimensiones: tiempo, cliente, servicio, zona
-        (como origen y destino), canal de venta y medio de pago.
-  \item \textbf{Período:} los últimos tres años. Los años exactos se fijan al
-        definir la fuente de datos, en el Avance N°2.
-  \item \textbf{Moneda:} los montos se expresan en pesos chilenos (CLP).
-  \item \textbf{Motor:} MariaDB, administrado con XAMPP y phpMyAdmin.
+        por un servicio de una línea de negocio, en una fecha: un pasaje de
+        bus, tren o avión, un viaje de taxi, un envío de logística o un pedido
+        de delivery.
+  \item \textbf{Período:} los últimos tres años, de 2023 a 2025.
+  \item \textbf{Clientes:} personas y empresas residentes en Chile,
+        identificadas con una llave común a todas las líneas.
+  \item \textbf{Moneda:} todos los montos se expresan en pesos chilenos (CLP).
+  \item \textbf{Usuario:} perfil táctico de la gerencia comercial y de
+        marketing.
+  \item \textbf{Tecnología:} Datawarehouse en PostgreSQL 17, ETL en Apache
+        Hop, cubo en Cube y dashboard en Streamlit
+        (Sección~\ref{sec:arquitectura}).
 \end{itemize}
 
-Este Avance N°1 incluye la definición del modelo multidimensional y el
-script SQL que crea su estructura, \emph{sin datos}. El poblamiento mediante
-ETL, el cubo, los KPI y el dashboard de visualización se desarrollan en los
-avances siguientes, de acuerdo con la planificación de la Tabla~\ref{tab:entregas}.
+El proyecto se entrega en tres avances, según la
+Tabla~\ref{tab:entregas}. Este Informe de Avance 1 incluye el caso de
+negocio, las fuentes de información, la arquitectura, el modelo
+multidimensional y el script SQL que crea su estructura, sin datos.
 
 \begin{table}[H]
   \centering
   \caption{Planificación de entregas del proyecto}
   \label{tab:entregas}
+  \small
   \begin{tabularx}{\linewidth}{@{}llX@{}}
     \toprule
     \textbf{Entrega} & \textbf{Fecha} & \textbf{Contenido} \\
     \midrule
-    Avance N°1 & 05-11-2026 & Caso de negocio, modelo multidimensional
+    Avance N°1 & 05-11-2026 & Caso de negocio, fuentes de información,
+                              arquitectura propuesta, modelo multidimensional
                               estrella y script SQL de creación (sin datos). \\
-    Avance N°2 & 19-11-2026 & Fuentes de información, ETL y poblamiento del
-                              Datawarehouse. \\
+    Avance N°2 & 19-11-2026 & ETL, poblamiento del Datawarehouse y
+                              estadísticas de procesamiento. \\
     Avance N°3 & 10-12-2026 & Cubo, KPI, dashboard de visualización,
                               recomendaciones y presentación. \\
     \bottomrule
   \end{tabularx}
 \end{table}
+
+\subsubsection{Limitaciones}
+\label{sec:limitaciones}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Clientes sintéticos:} ningún dataset público identifica a un
+        mismo cliente en varias líneas de transporte, por lo que los clientes
+        y su comportamiento entre líneas se generan de forma sintética. Los
+        resultados sobre tipos de clientes demuestran el funcionamiento de la
+        solución, pero no describen a clientes reales.
+  \item \textbf{Fuentes de otros países:} las transacciones provienen de
+        Brasil, el Reino Unido y Estados Unidos, mientras que los clientes
+        residen en Chile. Esto es coherente con una compañía internacional,
+        pero las zonas de origen y destino no son chilenas.
+  \item \textbf{Datos agregados:} ANTT publica totales mensuales de pasajes y
+        DB1B, una muestra trimestral; el detalle por día y por transacción se
+        asigna en el ETL de forma sintética, reproduciendo esos totales.
+  \item \textbf{Períodos distintos:} las fuentes que no cubren 2023--2025 se
+        trasladan a ese período, conservando su estacionalidad.
+  \item \textbf{Datos ficticios y licencias:} el dataset de trenes es ficticio
+        según su proveedor, y el de Delivery Center no publica su licencia. Si
+        esa licencia no permite su uso, la línea URapid Delivery se generará de
+        forma sintética, sin cambios en el modelo.
+  \item \textbf{Alcance de este avance:} el Datawarehouse se entrega sin datos,
+        por lo que las problemáticas no se cuantifican todavía.
+\end{itemize}

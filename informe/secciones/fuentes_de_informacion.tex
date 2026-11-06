@@ -1,0 +1,188 @@
+% =============================================================================
+% Capítulo 2: Fuentes de Información (nombre literal del enunciado)
+% Fuente: docs/fuentes_de_informacion.md (aprobada por el grupo el 05-11-2026).
+% =============================================================================
+\section{Fuentes de Información}
+\label{sec:fuentes}
+
+El enunciado permite usar datasets públicos disponibles en la web. Para cada
+línea de negocio se eligió una fuente pública con tres criterios: datos lo más
+cercanos posible a una transacción individual, el período más reciente
+disponible y una licencia que permita su uso académico.
+
+\subsection{Enfoque: Transacciones Públicas y Clientes Sintéticos}
+
+Los datos públicos de transporte se publican anonimizados, por lo que ningún
+dataset identifica a un mismo cliente en distintas líneas de negocio. Como el
+caso exige una vista única del cliente, el proyecto combina dos tipos de
+datos:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Transacciones públicas:} los viajes, pasajes, envíos y
+        pedidos provienen de las fuentes de la Tabla~\ref{tab:fuentes}.
+  \item \textbf{Clientes sintéticos:} las identidades de los clientes (RUT
+        ficticio, género, fecha de nacimiento, tipo de cliente y comuna de
+        residencia) se generan de forma sintética. Los clientes residen en
+        Chile, y su distribución por comuna, sexo y edad se calibra con el
+        Censo de Población y Vivienda 2024 del INE~\cite{ine_censo2024}. Cada
+        transacción pública se asigna a uno de estos clientes, de modo que un
+        mismo cliente puede comprar en varias líneas.
+\end{itemize}
+
+Todo dato sintético se identifica como tal en el código del ETL, en la base de
+datos y en este informe.
+
+\subsection{Fuentes por Línea de Negocio}
+
+\begin{table}[H]
+  \centering
+  \caption{Fuente pública de cada línea de negocio}
+  \label{tab:fuentes}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.4cm}
+                                  >{\raggedright\arraybackslash}X
+                                  >{\raggedright\arraybackslash}p{3.2cm}
+                                  >{\raggedright\arraybackslash}p{1.9cm}
+                                  >{\raggedright\arraybackslash}p{2.1cm}@{}}
+    \toprule
+    \textbf{Línea} & \textbf{Fuente (publicador, país)} & \textbf{Detalle}
+      & \textbf{Período} & \textbf{Licencia} \\
+    \midrule
+    Buses InterUrbanos & Monitriip «Bilhetes de Passagem», Agência Nacional de
+      Transportes Terrestres (ANTT), Brasil~\cite{antt_monitriip}
+      & Pasajes de buses interestatales por mes, origen, destino y tipo de
+        servicio & 2019--2025, mensual & Creative Commons Atribución \\
+    Trenes & «UK Train Rides», Maven Analytics, Reino Unido~\cite{maven_uktrain}
+      & Un registro por pasaje; datos ficticios según el proveedor
+      & Ene.--abr. 2024 & Dominio público \\
+    Radio Taxis & TLC Trip Record Data, NYC Taxi \& Limousine Commission,
+      EE.UU.~\cite{nyc_tlc} & Un registro por viaje & 2009--2026, mensual
+      & Términos de uso de NYC.gov \\
+    Logística y Distribución & «Brazilian E-Commerce Public Dataset», Olist,
+      Brasil~\cite{olist} & Un registro por pedido e ítem & 2016--2018
+      & CC BY-NC-SA 4.0 \\
+    Aerolíneas & Airline Origin and Destination Survey (DB1B), Bureau of
+      Transportation Statistics, EE.UU.~\cite{bts_db1b}
+      & Muestra de pasajes aéreos & Trimestral, incluye 2023--2025
+      & Datos públicos del gobierno de EE.UU. \\
+    URapid Delivery & «Delivery Center: Food \& Goods orders», Delivery
+      Center, Brasil~\cite{gironews_delivery,delivery_center}
+      & Un registro por pedido & Ene.--abr. 2021 & No publicada \\
+    \bottomrule
+  \end{tabularx}
+  \nota{Elaboración propia a partir de las páginas de cada fuente, consultadas
+  en noviembre de 2026. Para logística se mantiene como alternativa el dataset
+  DataCo Smart Supply Chain, con licencia CC BY 4.0~\cite{dataco}.}
+\end{table}
+
+La compañía del caso es internacional. Por eso, que las fuentes provengan de
+distintos países es coherente con la dimensión \bd{dim_zona}, que registra
+país y continente.
+
+\subsection{Uso de cada Fuente en el Modelo}
+
+La Tabla~\ref{tab:uso_fuentes} indica qué datos aporta cada fuente y a qué
+parte del modelo estrella llegan.
+
+\begin{table}[H]
+  \centering
+  \caption{Datos de cada fuente y su destino en el modelo}
+  \label{tab:uso_fuentes}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.4cm}
+                                  >{\raggedright\arraybackslash}X
+                                  >{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Línea} & \textbf{Datos que aporta} & \textbf{Destino en el modelo} \\
+    \midrule
+    Buses InterUrbanos & Origen y destino, tipo de servicio, cantidad de
+      pasajes, valor medio, gratuidades
+      & \bd{dim_zona} (origen y destino), \bd{dim_servicio},
+        \bd{cantidad}, montos \\
+    Trenes & Estaciones, fecha y hora, precio, tipo de compra (en línea o en
+      estación), medio de pago, clase
+      & \bd{dim_zona}, \bd{dim_tiempo}, montos, \bd{dim_canal_venta},
+        \bd{dim_medio_pago}, \bd{dim_servicio} \\
+    Radio Taxis & Zonas de origen y destino, horas de inicio y fin, distancia,
+      tarifas, tipo de pago
+      & \bd{dim_zona}, \bd{dim_tiempo}, \bd{duracion_minutos},
+        \bd{distancia_km}, montos, \bd{dim_medio_pago} \\
+    Logística y Distribución & Ciudad del vendedor y del cliente, precio,
+      costo de envío, peso del producto, tipo de pago
+      & \bd{dim_zona}, montos, \bd{peso_kg}, \bd{dim_medio_pago} \\
+    Aerolíneas & Aeropuertos de origen y destino, tarifa, pasajeros,
+      trimestre & \bd{dim_zona}, montos, \bd{cantidad}, \bd{dim_tiempo} \\
+    URapid Delivery & Canal, medio de pago, monto del pedido, tarifa de envío
+      & \bd{dim_canal_venta}, \bd{dim_medio_pago}, montos \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Fuentes de Apoyo}
+
+Además de las fuentes de transacciones, el proyecto usa las fuentes de apoyo de
+la Tabla~\ref{tab:fuentes_apoyo}. La dimensión \bd{dim_tiempo} no requiere
+fuente externa: se genera con un script SQL.
+
+\begin{table}[H]
+  \centering
+  \caption{Fuentes de apoyo y su uso en el proyecto}
+  \label{tab:fuentes_apoyo}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.2cm}
+                                  >{\raggedright\arraybackslash}X
+                                  >{\raggedright\arraybackslash}p{2.4cm}@{}}
+    \toprule
+    \textbf{Fuente} & \textbf{Uso} & \textbf{Se carga al DWH} \\
+    \midrule
+    Censo de Población y Vivienda 2024, INE~\cite{ine_censo2024}
+      & Calibrar los clientes sintéticos y poblar sus comunas y regiones de
+        residencia & Sí, en \bd{dim_cliente} \\
+    Tablas de zonas de cada fuente
+      & Zonas de taxi de Nueva York, puntos de origen y destino de ANTT,
+        estaciones del Reino Unido y aeropuertos de EE.UU.
+      & Sí, en \bd{dim_zona} \\
+    Tipos de cambio del Banco Central de Chile~\cite{bcentral}
+      & Expresar en pesos chilenos (CLP) los montos en dólares, libras y
+        reales & Sí, en los montos \\
+    Encuesta de transporte interurbano de pasajeros, INE~\cite{ine_etranp};
+    memoria anual de EFE~\cite{efe_memoria}; estadísticas de la
+    JAC~\cite{jac}
+      & Contexto chileno para el análisis y las recomendaciones & No \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Tratamientos Previos a la Carga}
+
+Antes de cargar los datos en el Datawarehouse, el ETL aplica los tratamientos
+siguientes. Las limitaciones que estos tratamientos implican se detallan en la
+Sección~\ref{sec:limitaciones}.
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Clientes sintéticos:} generación de los clientes residentes en
+        Chile y asignación de cada transacción a un cliente.
+  \item \textbf{Desagregación:} las fuentes que publican totales (ANTT por mes
+        y ruta, DB1B por trimestre) se convierten en transacciones
+        individuales sintéticas que reproducen esos totales.
+  \item \textbf{Período de análisis:} el objetivo pide los últimos tres años,
+        por lo que se trabaja con 2023 a 2025. Las fuentes de otros años
+        (Olist, Delivery Center) o que cubren solo una parte del período
+        (UK Train Rides) trasladan sus fechas a ese rango, conservando su
+        estacionalidad.
+  \item \textbf{Unidades y moneda:} millas a kilómetros, gramos a kilogramos y
+        montos a CLP.
+  \item \textbf{Muestreo:} de las fuentes con millones de registros, como los
+        viajes de taxi de Nueva York, se carga una muestra.
+\end{enumerate}
+
+\subsection{Estado de Verificación de las Fuentes}
+
+Las fuentes se revisaron en noviembre de 2026. Los datos de UK Train Rides,
+NYC TLC y DataCo se verificaron en sus páginas oficiales. De ANTT, Olist y BTS
+solo se vieron extractos en resultados de búsqueda (el portal de ANTT bloquea
+el acceso automatizado y la página de BTS respondió con error), y la página
+original de Delivery Center no se encontró: se revisó una copia publicada en
+GitHub. Antes de la carga del Avance N°2 se
+confirmarán en el navegador las columnas, la granularidad y la licencia de
+estas fuentes, además de la serie de tipos de cambio que se usará.

@@ -2,16 +2,18 @@
 % Informe de Proyecto BI — Transportes Rapiditos S.A. (Grupo 1)
 % Inteligencia de Negocios (INFB8101), Sección 412, UTEM, II Semestre 2026
 %
-% Compilar desde la carpeta informe/ con cualquiera de estos motores:
-%   latexmk -xelatex informe.tex     (motor previsto del proyecto)
+% Compilar desde la carpeta informe/ (latexmk ejecuta BibTeX por su cuenta):
 %   latexmk -lualatex informe.tex
 %   latexmk -pdf informe.tex         (pdfLaTeX)
-% Las capturas se leen desde ../docs/capturas/ y el esquema desde
-% ../docs/diagramas/. Si una imagen todavía no existe, se muestra un recuadro
+% Sin latexmk, la secuencia es: lualatex, bibtex, lualatex, lualatex.
+% Las referencias están en referencias.bib. Las capturas se leen desde
+% ../docs/capturas/, el esquema desde ../docs/diagramas/ y el logo desde
+% img/logo_utem.png. Si una imagen todavía no existe, se muestra un recuadro
 % con el nombre del archivo pendiente.
 % =============================================================================
-\documentclass[11pt,letterpaper]{article}
+\documentclass[12pt,letterpaper]{article}
 
+% Tipografía estándar de LaTeX: Latin Modern (Computer Modern)
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[utf8]{inputenc}
@@ -20,9 +22,11 @@
 \else
   \usepackage{fontspec}
 \fi
-\usepackage[spanish,es-tabla,es-noshorthands]{babel}
-\usepackage[margin=2.5cm]{geometry}
+\usepackage[spanish,es-tabla,es-noshorthands,es-lcroman]{babel}
+\usepackage[letterpaper,left=2.5cm,right=2.5cm,bottom=2.5cm,top=3.8cm,
+            headheight=48pt,headsep=14pt]{geometry}
 \usepackage{microtype}
+\usepackage{setspace}
 \usepackage{parskip}
 \usepackage{graphicx}
 \usepackage{float}
@@ -33,69 +37,245 @@
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage{fancyhdr}
-\usepackage[hidelinks]{hyperref}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,fit,backgrounds}
+\usepackage{babelbib}
+\usepackage{hyperref}
 
-% Nombres de tablas y columnas en monoespaciado, sin escapar los guiones bajos
-\newcommand{\bd}[1]{\texttt{\detokenize{#1}}}
+% Colores institucionales (Manual de Identidad Visual UTEM)
+\definecolor{azulutem}{HTML}{004EAA}
+\definecolor{verdeutem}{HTML}{78BF26}
 
-% \captura[ancho]{archivo}{pie de figura}: incluye docs/capturas/<archivo> si existe
+% Enlaces internos (índices, referencias cruzadas y citas) y URL en negro,
+% como el resto del texto, sin recuadros; siguen siendo pulsables en el PDF
+\hypersetup{colorlinks=true, linkcolor=black, citecolor=black,
+            urlcolor=black, filecolor=black,
+            pdftitle={Informe de Avance 1: Transportes Rapiditos S.A.},
+            pdfauthor={Grupo 1, Inteligencia de Negocios, UTEM}}
+
+% Interlineado de 1,5, como el formato de referencia
+\onehalfspacing
+% Holgura extra para cortar líneas con nombres de columnas largos sin que se
+% salgan del margen
+\setlength{\emergencystretch}{2em}
+
+% Las URL largas pueden cortarse en cualquier letra o número (sin el paquete xurl)
+\expandafter\def\expandafter\UrlBreaks\expandafter{\UrlBreaks
+  \do\a\do\b\do\c\do\d\do\e\do\f\do\g\do\h\do\i\do\j\do\k\do\l\do\m
+  \do\n\do\o\do\p\do\q\do\r\do\s\do\t\do\u\do\v\do\w\do\x\do\y\do\z
+  \do\A\do\B\do\C\do\D\do\E\do\F\do\G\do\H\do\I\do\J\do\K\do\L\do\M
+  \do\N\do\O\do\P\do\Q\do\R\do\S\do\T\do\U\do\V\do\W\do\X\do\Y\do\Z
+  \do0\do1\do2\do3\do4\do5\do6\do7\do8\do9}
+
+% Bibliografía con BibTeX (estilo babunsrt de babelbib): numerada en orden de
+% aparición, con los términos en español ("y", "edición", "visitado el"), las
+% URL con \url y los títulos tal como se escriben en referencias.bib. Las
+% entradas no llevan campo language, por lo que BibTeX avisa una vez "empty
+% language": es inofensivo y hace que todas usen el idioma del documento.
+\selectbiblanguage{spanish}
+\renewcommand{\btxurlfont}{\url}
+\btxifchangecaseoff
+
+% -----------------------------------------------------------------------------
+% Títulos, índices y leyendas
+% -----------------------------------------------------------------------------
+\addto\captionsspanish{%
+  \renewcommand{\contentsname}{Índice}%
+  \renewcommand{\listtablename}{Índice de Tablas}%
+  \renewcommand{\listfigurename}{Índice de Figuras}%
+}
+\setcounter{tocdepth}{3}
+
+% Tablas y figuras numeradas por capítulo (Tabla 1.1, Figura 3.1), con la
+% leyenda arriba
+\counterwithin{table}{section}
+\counterwithin{figure}{section}
+\captionsetup{labelsep=colon, justification=centering, skip=6pt}
+\captionsetup[table]{position=top}
+\captionsetup[figure]{position=top}
+
+% Formato estándar de LaTeX en los índices de tablas y figuras, con un poco más
+% de espacio para el número, porque "5.10." no cabe en el ancho por omisión
+\makeatletter
+\renewcommand*\l@figure{\@dottedtocline{1}{1.5em}{2.8em}}
+\let\l@table\l@figure
+\makeatother
+
+% -----------------------------------------------------------------------------
+% Comandos del informe
+% -----------------------------------------------------------------------------
+% Nombres de tablas y columnas en monoespaciado, sin escapar los guiones bajos.
+% Permite cortar la línea después de cada "_" y cada "/" (los nombres largos
+% no caben en columnas angostas). Es robusto para que funcione en títulos,
+% leyendas e índices, y en los marcadores del PDF se escribe como texto simple.
+\ExplSyntaxOn
+\tl_const:Nx \c__bd_guion_bajo_tl { \tl_to_str:n { _ } }
+\tl_const:Nx \c__bd_barra_tl { \tl_to_str:n { / } }
+\tl_new:N \l__bd_texto_tl
+\cs_generate_variant:Nn \tl_replace_all:Nnn { NV }
+\cs_new_protected:Npn \__bd_escribir:n #1
+  {
+    \tl_set:Nx \l__bd_texto_tl { \tl_to_str:n {#1} }
+    \tl_replace_all:NVn \l__bd_texto_tl \c__bd_guion_bajo_tl
+      { \c__bd_guion_bajo_tl \allowbreak }
+    \tl_replace_all:NVn \l__bd_texto_tl \c__bd_barra_tl
+      { \c__bd_barra_tl \allowbreak }
+    \texttt { \l__bd_texto_tl }
+  }
+\DeclareRobustCommand { \bd } [1] { \__bd_escribir:n {#1} }
+\ExplSyntaxOff
+\pdfstringdefDisableCommands{\def\bd#1{\detokenize{#1}}}
+
+% Nota bajo una tabla o figura, al estilo APA
+\newcommand{\nota}[1]{\par\smallskip{\small\textit{Nota.} #1}\par}
+
+% Contorno de 1 px (0,75 pt, el píxel de pantalla a 96 ppp) alrededor de cada
+% figura. \contorno[separación]{contenido}: sin separación para las imágenes y
+% con un margen interior para los diagramas TikZ.
+\newlength{\grosorcontorno}
+\setlength{\grosorcontorno}{0.75pt}
+\newcommand{\contorno}[2][0pt]{%
+  {\setlength{\fboxrule}{\grosorcontorno}\setlength{\fboxsep}{#1}\fbox{#2}}}
+
+% \captura[ancho]{archivo}{leyenda}: incluye docs/capturas/<archivo> si existe
 \newcommand{\captura}[3][\linewidth]{%
   \begin{figure}[H]
     \centering
+    \caption{#3}
     \IfFileExists{../docs/capturas/#2}{%
-      \includegraphics[width=#1,height=0.42\textheight,keepaspectratio]{../docs/capturas/#2}%
+      \contorno{\includegraphics[width=\dimexpr#1-2\grosorcontorno\relax,
+        height=0.42\textheight,keepaspectratio]{../docs/capturas/#2}}%
     }{%
       \fbox{\parbox{0.8\linewidth}{\centering\vspace{2.5em}%
         Captura pendiente: \bd{docs/capturas/#2}\vspace{2.5em}}}%
     }
-    \caption{#3}
   \end{figure}%
 }
 
+% Encabezado institucional: logo UTEM y nombre de la universidad, facultad y escuela
+\newcommand{\institucion}{%
+  {\linespread{1}\selectfont\renewcommand{\arraystretch}{1}%
+  \begin{tabular}{@{}m{1.05cm}@{\hspace{0.5em}}m{10cm}@{}}
+    \IfFileExists{img/logo_utem.png}{\includegraphics[height=1.3cm]{img/logo_utem.png}}{} &
+    \small Universidad Tecnológica Metropolitana\newline
+    Facultad de Ingeniería\newline
+    Escuela de Informática y Computación
+  \end{tabular}}}
+
+% Estilos de los fragmentos de código. Interlineado simple dentro de los
+% listados. Todos los caracteres no ASCII de los scripts se declaran aquí:
+% listings no los maneja solo, y los que no se declaran se filtran al listado
+% desde las líneas que salta firstline (aparecían "→…" sobre la Figura 5.1).
+\lstset{
+  extendedchars=true,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+           {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {°}{{\textdegree}}1
+           {→}{{$\rightarrow$}}1 {…}{{\ldots}}1}
+% En LuaLaTeX, listings no puede declarar caracteres de más de 8 bits, y los
+% de las líneas que salta firstline se filtran al listado. \sinunicode lee el
+% archivo reemplazando "→" y "…" por "->" y "..." (solo afecta a la lectura
+% del listado; en pdfLaTeX basta con literate)
+\ifLuaTeX
+  \directlua{
+    function rapiditos_ascii(linea)
+      return (linea:gsub("→", "->"):gsub("…", "..."))
+    end
+  }
+  \newcommand{\sinunicode}[1]{%
+    \directlua{luatexbase.add_to_callback("process_input_buffer",
+      rapiditos_ascii, "rapiditos_ascii")}%
+    #1%
+    \directlua{luatexbase.remove_from_callback("process_input_buffer",
+      "rapiditos_ascii")}}
+\else
+  \newcommand{\sinunicode}[1]{#1}
+\fi
+\lstdefinestyle{sql}{
+  language=SQL, basicstyle=\linespread{1}\ttfamily\scriptsize,
+  columns=fullflexible, keepspaces=true, numbers=left,
+  numberstyle=\tiny\color{gray}, keywordstyle=\bfseries\color{azulutem},
+  commentstyle=\itshape\color{gray},
+  morekeywords={GENERATED,IDENTITY,BY,DEFAULT,RESTRICT,CONSTRAINT,REFERENCES},
+  frame=single, framerule=\grosorcontorno, rulecolor=\color{black},
+  breaklines=true, showstringspaces=false, linewidth=\linewidth}
+\lstdefinestyle{consola}{
+  basicstyle=\linespread{1}\ttfamily\footnotesize, columns=fullflexible,
+  keepspaces=true, frame=single, rulecolor=\color{gray!60},
+  backgroundcolor=\color{gray!6}, breaklines=true, showstringspaces=false,
+  aboveskip=4pt, belowskip=6pt}
+
 \pagestyle{fancy}
 \fancyhf{}
-\lhead{Transportes Rapiditos S.A.}
-\rhead{Proyecto BI — Grupo 1}
-\cfoot{\thepage}
+\fancyhead[L]{\institucion}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
 
 \begin{document}
 
 % ----------------------------------------------------------------------------
 % Portada
 % ----------------------------------------------------------------------------
+\pagenumbering{Alph}
 \begin{titlepage}
-  \centering
-  \IfFileExists{img/logo_utem.png}{\includegraphics[width=0.35\linewidth]{img/logo_utem.png}\par\vspace{1.5cm}}{}
-  {\large Universidad Tecnológica Metropolitana\par}
-  \vspace{0.3cm}
-  {\large Inteligencia de Negocios (INFB8101) — Sección 412\par}
-  \vspace{3cm}
-  {\Huge\bfseries Informe de Proyecto BI\par}
-  \vspace{0.6cm}
-  {\LARGE Transportes Rapiditos S.A.\par}
-  \vspace{0.4cm}
-  {\Large Avance N°1\par}
-  \vfill
-  \begin{tabular}{rl}
-    \textbf{Integrantes:} & Ignacio Ahumada Poque \\
-                          & Leonardo Solís Ortiz \\
-                          & Vicente Fuentes Rodríguez \\
-                          & Gabriel García Vega \\[0.3cm]
-    \textbf{Profesor:}    & Luis Cofré B. \\[0.3cm]
-    \textbf{Fecha:}       & 05 de noviembre de 2026 \\
-  \end{tabular}
-  \vspace{1.5cm}
+  \institucion
+  \vspace*{3cm}
+  \begin{center}
+    {\bfseries Arquitectura de Solución de Inteligencia de Negocios:\par}
+    \vspace{0.4cm}
+    {\bfseries Vista Única del Cliente en\\ Transportes Rapiditos S.A. (2023-2025)\par}
+    \vspace{0.6cm}
+    {\bfseries Informe de Avance 1\par}
+    \vspace{0.4cm}
+    Caso de Negocio, Fuentes de Información y Modelo Multidimensional\par
+    \vspace{0.4cm}
+    Asignatura Inteligencia de Negocios (INFB8101), Sección 412\par
+    \vspace{0.4cm}
+    Proyecto Semestral -- II Semestre 2026\par
+    \vspace{2.2cm}
+    {\renewcommand{\arraystretch}{1.25}%
+    \begin{tabular}{c|c}
+      \textbf{Profesor} & \textbf{Integrantes (Grupo 1)} \\
+      \hline
+      \rule{0pt}{18pt}Luis Cofré B. & Ignacio Ahumada Poque \\
+                                    & Vicente Fuentes Rodríguez \\
+                                    & Gabriel García Vega \\
+                                    & Leonardo Solís Ortiz
+    \end{tabular}}
+    \vfill
+    Santiago, Chile, noviembre de 2026
+  \end{center}
 \end{titlepage}
 
+% Páginas preliminares en números romanos; el cuerpo parte en 1
+\pagenumbering{roman}
 \tableofcontents
-\newpage
+\clearpage
+\listoftables
+\clearpage
+\listoffigures
+\clearpage
 
-% Secciones del informe con los nombres literales del enunciado.
+\input{secciones/resumen_ejecutivo}
+
+% Capítulos. Los nombres de las secciones del enunciado se copian literalmente.
+% Estadísticas de Procesamiento (Avance N°2) y Recomendaciones (Avance N°3) se
+% agregan en sus entregas.
+\clearpage
+\pagenumbering{arabic}
 \input{secciones/caso_de_negocio}
-% \input{secciones/fuentes_de_informacion}          % Avance N°2
-% \input{secciones/arquitectura_propuesta}          % Avance N°2
-% \input{secciones/estadisticas_de_procesamiento}   % Avance N°2
+\clearpage
+\input{secciones/fuentes_de_informacion}
+\clearpage
+\input{secciones/arquitectura_propuesta}
+\clearpage
 \input{secciones/modelamiento_dimensional}
-% \input{secciones/recomendaciones}                 % Avance N°3
+\clearpage
+\input{secciones/scripts_data_warehouse}
+\clearpage
+\input{secciones/bibliografia}
+\clearpage
+\input{secciones/anexos}
 
 \end{document}

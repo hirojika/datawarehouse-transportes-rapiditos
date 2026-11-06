@@ -1,13 +1,33 @@
 % =============================================================================
-% Sección: Modelamiento Dimensional (nombre literal del enunciado)
+% Capítulo 4: Modelamiento Dimensional (nombre literal del enunciado)
 % Fuente: docs/modelo_dimensional.md. Cualquier cambio se hace primero ahí.
 % =============================================================================
 \section{Modelamiento Dimensional}
+\label{sec:modelo}
 
-El modelo se diseñó con la metodología de Kimball, en este orden: proceso de
-negocio, grano, dimensiones y métricas.
+El modelo se diseñó con la metodología de Kimball y Ross~\cite{kimball2013},
+que define cuatro pasos en este orden: elegir el proceso de negocio, declarar
+el grano, identificar las dimensiones e identificar los hechos (medidas). El
+resultado es el modelo estrella de la Figura~\ref{fig:esquema}: la tabla de
+hechos \bd{fact_venta} al centro y las seis dimensiones alrededor. Ninguna
+dimensión referencia a otra, como exige el modelo estrella.
 
-\subsection{Proceso de negocio y grano}
+\begin{figure}[tbp]  % flotante: con [H] dejaba media página en blanco
+  \centering
+  \caption{Modelo multidimensional estrella del esquema \bd{dwh}}
+  \label{fig:esquema}
+  \IfFileExists{../docs/diagramas/esquema_estrella.png}{%
+    \contorno{\includegraphics[width=\dimexpr\linewidth-2\grosorcontorno\relax,
+      height=0.68\textheight,keepaspectratio]{../docs/diagramas/esquema_estrella.png}}%
+  }{%
+    \fbox{\parbox{0.8\linewidth}{\centering\vspace{3em}%
+      Esquema pendiente: \bd{docs/diagramas/esquema_estrella.png}\vspace{3em}}}%
+  }
+  \nota{Diagrama generado con el ERD Tool de pgAdmin 4 a partir de la base de
+  datos creada por \bd{sql/01_ddl.sql}.}
+\end{figure}
+
+\subsection{Proceso de Negocio y Grano}
 
 \begin{itemize}[leftmargin=*]
   \item \textbf{Proceso de negocio:} compras de servicios realizadas por los
@@ -16,7 +36,11 @@ negocio, grano, dimensiones y métricas.
         por un servicio de una línea de negocio, en una fecha.
 \end{itemize}
 
-\subsection{Alternativas evaluadas}
+Se eligió el grano más fino disponible, la transacción, porque permite
+agregar los datos a cualquier nivel que necesite el análisis (cliente, mes,
+año, zona o línea) y conserva todas las variables de comportamiento del
+objetivo. Antes de elegirlo se evaluaron las tres alternativas de la
+Tabla~\ref{tab:alternativas}.
 
 \begin{table}[H]
   \centering
@@ -38,7 +62,7 @@ negocio, grano, dimensiones y métricas.
       & Completo & Parcial: pierde origen, destino y canal
       & Completo pero repartido \\
     Simplicidad de ETL y script & Media & Alta & Baja \\
-    Riesgo en la rúbrica & Bajo & Pierde medidas & Medio \\
+    Riesgo de no cubrir las medidas necesarias & Bajo & Alto & Medio \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -46,76 +70,18 @@ negocio, grano, dimensiones y métricas.
 Se eligió la alternativa A porque es una estrella única centrada en el
 cliente y conserva todas las variables de comportamiento que pide el objetivo.
 
-\subsection{Esquema de tablas}
+\subsection{Tabla de Hechos}
 
-La Figura~\ref{fig:esquema} muestra el modelo estrella: la tabla de hechos
-\bd{fact_venta} al centro y las seis dimensiones alrededor. Ninguna dimensión
-referencia a otra. La dimensión \bd{dim_zona} cumple un rol doble: la tabla de
-hechos la referencia dos veces, como zona de origen y como zona de destino.
-
-\begin{figure}[H]
-  \centering
-  \IfFileExists{../docs/diagramas/esquema_estrella.png}{%
-    \includegraphics[width=\linewidth,height=0.5\textheight,keepaspectratio]{../docs/diagramas/esquema_estrella.png}%
-  }{%
-    \fbox{\parbox{0.8\linewidth}{\centering\vspace{3em}%
-      Esquema pendiente: \bd{docs/diagramas/esquema_estrella.png}\vspace{3em}}}%
-  }
-  \caption{Modelo multidimensional estrella de \bd{dwh_rapiditos} (Diseñador de phpMyAdmin)}
-  \label{fig:esquema}
-\end{figure}
-
-\subsection{Dimensiones}
-
-Todas las dimensiones tienen una llave sustituta autoincremental
-(\bd{id_<entidad>}) y una llave natural única (\bd{codigo_<entidad>}). La
-excepción es \bd{dim_tiempo}, cuya llave es la fecha en formato AAAAMMDD.
-
-\begin{table}[H]
-  \centering
-  \caption{Dimensiones del modelo}
-  \label{tab:dimensiones}
-  \small
-  \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
-    \toprule
-    \textbf{Dimensión} & \textbf{Propósito} & \textbf{Atributos} \\
-    \midrule
-    \bd{dim_tiempo} & Análisis anual y por período. Jerarquía fecha, mes,
-      trimestre, semestre y año.
-      & fecha, día, día de la semana, fin de semana, semana del año, mes,
-        trimestre, semestre, año \\
-    \bd{dim_cliente} & Vista única del cliente entre las seis líneas.
-      & código, nombre, género, fecha de nacimiento, tipo (persona o
-        empresa), comuna, región y país de residencia, fecha de registro \\
-    \bd{dim_servicio} & Línea de negocio y medio de transporte, en una sola
-      tabla para mantener la estrella.
-      & código, línea de negocio, medio de transporte, tipo de servicio
-        (pasajeros o carga), clase de servicio \\
-    \bd{dim_zona} & Zona geográfica, con rol de origen y de destino.
-      Jerarquía comuna, ciudad, región, país y continente.
-      & código, comuna, ciudad, región, país, continente \\
-    \bd{dim_canal_venta} & Canal por el que se realizó la compra.
-      & código, nombre del canal (app, web, boletería, call center, convenio
-        empresa) \\
-    \bd{dim_medio_pago} & Medio de pago de la compra.
-      & código, nombre del medio de pago (efectivo, débito, crédito,
-        transferencia, billetera digital) \\
-    \bottomrule
-  \end{tabularx}
-\end{table}
-
-\subsection{Tabla de hechos}
-
-La tabla \bd{fact_venta} contiene siete llaves foráneas hacia las
-dimensiones, una dimensión degenerada y las medidas de la
-Tabla~\ref{tab:medidas}.
+La tabla \bd{fact_venta} registra cada transacción de compra. Contiene:
 
 \begin{itemize}[leftmargin=*]
-  \item \textbf{Llaves foráneas:} \bd{id_tiempo}, \bd{id_cliente},
-        \bd{id_servicio}, \bd{id_zona_origen}, \bd{id_zona_destino},
-        \bd{id_canal_venta} e \bd{id_medio_pago}.
-  \item \textbf{Dimensión degenerada:} \bd{numero_transaccion}, el
-        identificador del sistema de origen, prefijado por línea de negocio.
+  \item \textbf{Siete llaves foráneas} hacia las dimensiones: \bd{id_tiempo},
+        \bd{id_cliente}, \bd{id_servicio}, \bd{id_zona_origen},
+        \bd{id_zona_destino}, \bd{id_canal_venta} e \bd{id_medio_pago}.
+  \item \textbf{Una dimensión degenerada:} \bd{numero_transaccion}, el
+        identificador de la transacción en el sistema de origen, prefijado por
+        línea de negocio para que sea único entre líneas.
+  \item \textbf{Ocho medidas}, descritas en la Tabla~\ref{tab:medidas}.
 \end{itemize}
 
 \begin{table}[H]
@@ -127,78 +93,165 @@ Tabla~\ref{tab:medidas}.
     \toprule
     \textbf{Medida} & \textbf{Tipo de dato} & \textbf{Tipo de medida} & \textbf{Descripción} \\
     \midrule
-    \bd{cantidad}         & INT UNSIGNED     & Aditiva    & Pasajes, bultos o unidades \\
-    \bd{monto_bruto}      & DECIMAL(12,2)    & Aditiva    & Monto antes de descuento (CLP) \\
-    \bd{monto_descuento}  & DECIMAL(12,2)    & Aditiva    & Descuento aplicado (CLP) \\
-    \bd{monto_neto}       & DECIMAL(12,2)    & Aditiva    & Monto pagado (CLP) \\
-    \bd{distancia_km}     & DECIMAL(10,2)    & Aditiva    & Distancia recorrida \\
-    \bd{duracion_minutos} & INT UNSIGNED     & Aditiva    & Duración del servicio \\
-    \bd{peso_kg}          & DECIMAL(10,2)    & Aditiva    & Solo logística y delivery \\
-    \bd{edad_cliente}     & TINYINT UNSIGNED & No aditiva & Edad al momento de la compra \\
+    \bd{cantidad}         & INTEGER          & Aditiva    & Pasajes, bultos o unidades \\
+    \bd{monto_bruto}      & NUMERIC(12,2)    & Aditiva    & Monto antes de descuento (CLP) \\
+    \bd{monto_descuento}  & NUMERIC(12,2)    & Aditiva    & Descuento aplicado (CLP) \\
+    \bd{monto_neto}       & NUMERIC(12,2)    & Aditiva    & Monto pagado (CLP): bruto menos descuento \\
+    \bd{distancia_km}     & NUMERIC(10,2)    & Aditiva    & Distancia recorrida \\
+    \bd{duracion_minutos} & INTEGER          & Aditiva    & Duración del servicio \\
+    \bd{peso_kg}          & NUMERIC(10,2)    & Aditiva    & Peso de la carga; solo logística y delivery \\
+    \bd{edad_cliente}     & SMALLINT         & No aditiva & Edad al momento de la compra; nula para empresas \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-\subsection{Cálculos y KPI derivados}
+La edad se guarda en la tabla de hechos, y no solo como fecha de nacimiento
+en \bd{dim_cliente}, porque el objetivo analiza el comportamiento anual: un
+mismo cliente cambia de rango etario a lo largo de los tres años, y cada compra
+debe quedar asociada a la edad que tenía en ese momento. Como no es aditiva, la
+edad se analiza con promedios o como rango etario, nunca sumada.
+
+\subsection{Dimensiones}
+
+Todas las dimensiones tienen una llave sustituta generada por la base de
+datos (\bd{id_<entidad>}, de tipo \bd{IDENTITY}) y una llave natural única
+(\bd{codigo_<entidad>}), que es la que usa el ETL para no duplicar registros.
+La excepción es \bd{dim_tiempo}, cuya llave es la fecha en formato AAAAMMDD.
+El detalle de cada columna está en el Anexo~A (Sección~\ref{sec:anexo_diccionario}).
+
+\subsubsection{Dimensión Tiempo (\bd{dim_tiempo})}
+
+Permite el análisis anual que pide el objetivo y su desglose por semestre,
+trimestre, mes, semana y día. Tiene granularidad diaria y atributos de fecha,
+día, día de la semana, nombre del día, indicador de fin de semana, semana del
+año, mes, nombre del mes, trimestre, semestre y año. Se genera con un script
+SQL para todo el período 2023--2025.
+
+\subsubsection{Dimensión Cliente (\bd{dim_cliente})}
+
+Es la dimensión central del caso, porque unifica al cliente entre las seis
+líneas: su llave natural (\bd{codigo_cliente}, el RUT o documento) es la misma
+en todas ellas. Registra nombre, género, fecha de nacimiento, tipo de cliente
+(persona o empresa), comuna, región y país de residencia, y fecha de registro.
+En este proyecto sus registros son sintéticos (Sección~\ref{sec:fuentes}).
+
+\subsubsection{Dimensión Servicio (\bd{dim_servicio})}
+
+Describe qué compró el cliente: la línea de negocio, el medio de transporte,
+el tipo de servicio (pasajeros o carga) y la clase de servicio (por ejemplo,
+económica, ejecutiva, express o estándar). La línea de negocio y el medio de transporte se
+guardan en esta misma tabla, y no en dimensiones aparte, para mantener la
+estrella sin dimensiones que referencien a otras.
+
+\subsubsection{Dimensión Zona (\bd{dim_zona})}
+
+Describe el lugar de origen y de destino del servicio, con comuna, ciudad,
+región, país y continente. Es una dimensión de \emph{rol doble}: la tabla de
+hechos la referencia dos veces, con \bd{id_zona_origen} e
+\bd{id_zona_destino}, en lugar de duplicar la tabla.
+
+\subsubsection{Dimensión Canal de Venta (\bd{dim_canal_venta})}
+
+Registra el canal por el que se hizo la compra, como aplicación móvil, sitio
+web, boletería, call center o convenio con empresas.
+
+\subsubsection{Dimensión Medio de Pago (\bd{dim_medio_pago})}
+
+Registra el medio con que se pagó la compra, como efectivo, tarjeta de débito,
+tarjeta de crédito, transferencia o billetera digital.
+
+\subsection{Jerarquías}
+
+Las dimensiones tienen las jerarquías de la Tabla~\ref{tab:jerarquias}, que
+permiten al usuario agregar los datos o desglosarlos desde el nivel más
+general al más detallado en el cubo y el dashboard.
+
+\begin{table}[H]
+  \centering
+  \caption{Jerarquías de las dimensiones}
+  \label{tab:jerarquias}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.2cm}
+                                  >{\raggedright\arraybackslash}X
+                                  >{\raggedright\arraybackslash}p{4.6cm}@{}}
+    \toprule
+    \textbf{Dimensión} & \textbf{Jerarquía (de general a detallado)} & \textbf{Uso en el análisis} \\
+    \midrule
+    \bd{dim_tiempo} & Año → semestre → trimestre → mes → fecha
+      & Comportamiento anual y estacionalidad \\
+    \bd{dim_zona} & Continente → país → región → ciudad → comuna
+      & Zonas de origen y destino \\
+    \bd{dim_cliente} & País → región → comuna de residencia
+      & Clientes y gasto por lugar de residencia \\
+    \bd{dim_servicio} & Tipo de servicio → línea de negocio → clase de servicio
+      & Uso de líneas y medios de transporte \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Cálculos y KPI Derivados}
+\label{sec:kpi}
+
+Las medidas de la tabla de hechos permiten calcular los indicadores de la
+Tabla~\ref{tab:kpi}, que responden las preguntas de negocio de la
+Sección~\ref{sec:preguntas}. Se definirán como métricas del cubo en el Avance
+N°3. El rango etario se calcula a partir de \bd{edad_cliente} en el cubo.
 
 \begin{table}[H]
   \centering
   \caption{Cálculos y KPI derivados de las medidas}
   \label{tab:kpi}
   \small
-  \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}
+                                  >{\raggedright\arraybackslash}X
+                                  >{\raggedright\arraybackslash}p{1.9cm}@{}}
     \toprule
-    \textbf{KPI} & \textbf{Cálculo} \\
+    \textbf{KPI} & \textbf{Cálculo} & \textbf{Preguntas} \\
     \midrule
-    Ventas netas              & \bd{SUM(monto_neto)} \\
-    Ticket promedio           & \bd{SUM(monto_neto) / COUNT(id_venta)} \\
-    Clientes activos por año  & \bd{COUNT(DISTINCT id_cliente)} por año \\
-    Frecuencia de compra      & \bd{COUNT(id_venta) / COUNT(DISTINCT id_cliente)} \\
-    Gasto anual por cliente   & \bd{SUM(monto_neto) / COUNT(DISTINCT id_cliente)} por año \\
-    Participación por línea   & \bd{SUM(monto_neto)} de la línea / \bd{SUM(monto_neto)} total \\
-    Clientes multilínea       & Clientes con \bd{COUNT(DISTINCT linea_negocio) > 1} por año \\
-    Tasa de descuento         & \bd{SUM(monto_descuento) / SUM(monto_bruto)} \\
+    Ventas netas              & \bd{SUM(monto_neto)} & P3, P8 \\
+    Ticket promedio           & \bd{SUM(monto_neto) / COUNT(id_venta)} & P4 \\
+    Clientes activos por año  & \bd{COUNT(DISTINCT id_cliente)} por año & P1, P3 \\
+    Frecuencia de compra      & \bd{COUNT(id_venta) / COUNT(DISTINCT id_cliente)} & P4 \\
+    Gasto anual por cliente   & \bd{SUM(monto_neto) / COUNT(DISTINCT id_cliente)} por año & P3, P9 \\
+    Participación por línea   & \bd{SUM(monto_neto)} de la línea / \bd{SUM(monto_neto)} total & P5, P6 \\
+    Clientes multilínea       & Clientes con \bd{COUNT(DISTINCT linea_negocio) > 1} por año & P2 \\
+    Tasa de descuento         & \bd{SUM(monto_descuento) / SUM(monto_bruto)} & P11 \\
+    \bottomrule
+  \end{tabularx}
+  \nota{Las preguntas P7 y P10 se responden con los mismos indicadores
+  agrupados por zona de origen y destino, canal de venta y medio de pago.}
+\end{table}
+
+\subsection{Norma de Nomenclatura}
+
+Todo el modelo sigue la norma de la Tabla~\ref{tab:nomenclatura}. La consulta
+de control del script \bd{sql/99_validacion.sql} verifica que ninguna
+restricción ni índice quede fuera de ella (Sección~\ref{sec:verificacion}).
+
+\begin{table}[H]
+  \centering
+  \caption{Norma de nomenclatura del modelo}
+  \label{tab:nomenclatura}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}
+                                  >{\raggedright\arraybackslash}X
+                                  >{\raggedright\arraybackslash}p{5.2cm}@{}}
+    \toprule
+    \textbf{Elemento} & \textbf{Regla} & \textbf{Ejemplo} \\
+    \midrule
+    Tablas & Prefijo \bd{fact_} o \bd{dim_}; singular, \bd{snake_case} y
+      minúsculas & \bd{fact_venta}, \bd{dim_cliente} \\
+    Columnas & Singular, \bd{snake_case} y minúsculas & \bd{monto_neto} \\
+    Llave primaria & \bd{id_<entidad>} & \bd{id_cliente} \\
+    Llave natural & \bd{codigo_<entidad>} & \bd{codigo_cliente} \\
+    Llave foránea & Mismo nombre que la llave primaria referenciada, con
+      sufijo de rol si corresponde & \bd{id_zona_origen} \\
+    Restricción PK & \bd{pk_<tabla>} & \bd{pk_fact_venta} \\
+    Restricción FK & \bd{fk_<tabla>_<columna>} & \bd{fk_fact_venta_id_cliente} \\
+    Restricción UNIQUE & \bd{uq_<tabla>_<columna>} & \bd{uq_dim_zona_codigo_zona} \\
+    Restricción CHECK & \bd{ck_<tabla>_<columna>}, con la columna que valida
+      & \bd{ck_fact_venta_monto_neto} \\
+    Índice & \bd{ix_<tabla>_<columna>} & \bd{ix_fact_venta_id_tiempo} \\
     \bottomrule
   \end{tabularx}
 \end{table}
-
-\subsection{Norma de nomenclatura}
-
-\begin{itemize}[leftmargin=*]
-  \item Prefijo \bd{fact_} para la tabla de hechos y \bd{dim_} para las
-        dimensiones.
-  \item Nombres en singular, en \bd{snake_case} y en minúsculas, en todas las
-        tablas y columnas.
-  \item Llave primaria \bd{id_<entidad>} y llave natural \bd{codigo_<entidad>}.
-  \item Llave foránea con el mismo nombre que la llave primaria referenciada;
-        en la dimensión de rol se agrega un sufijo (\bd{id_zona_origen},
-        \bd{id_zona_destino}).
-  \item Restricciones con nombre: \bd{fk_<tabla>_<columna>} y
-        \bd{uq_<tabla>_<columna>}. La llave primaria se declara sin nombre,
-        porque MariaDB la registra siempre como \bd{PRIMARY}.
-\end{itemize}
-
-\subsection{Implementación en MariaDB}
-
-El script \bd{sql/01_ddl.sql} crea la base \bd{dwh_rapiditos} con las seis
-dimensiones y la tabla de hechos, sin datos. Es idempotente: elimina y vuelve
-a crear la base, por lo que se puede ejecutar de corrido en la pestaña SQL de
-phpMyAdmin las veces que sea necesario. Todas las tablas usan el motor InnoDB
-y el juego de caracteres \bd{utf8mb4}. El script \bd{sql/99_validacion.sql}
-consulta \bd{information_schema} para verificar tablas, columnas y llaves.
-
-\captura{01_xampp_activo.png}{XAMPP con Apache y MySQL (MariaDB) activos}
-\captura{02_phpmyadmin_ddl_ejecutado.png}{Ejecución de \bd{sql/01_ddl.sql} en la pestaña SQL de phpMyAdmin}
-\captura{03_estructura_fact_venta.png}{Estructura de la tabla de hechos \bd{fact_venta} en phpMyAdmin}
-\captura{04_disenador_esquema_estrella.png}{Esquema estrella en el Diseñador de phpMyAdmin}
-La Figura~\ref{fig:val_tablas} confirma que las siete tablas usan InnoDB y
-\bd{utf8mb4_unicode_ci}. La Figura~\ref{fig:val_fk} muestra las siete llaves
-foráneas de \bd{fact_venta}, todas con nombre normado. La
-Figura~\ref{fig:val_resumen} confirma la estrella: solo la tabla de hechos
-tiene llaves foráneas salientes, y \bd{dim_zona} es referenciada dos veces
-(origen y destino). Las tres figuras son recortes de la misma ejecución de
-\bd{sql/99_validacion.sql}.
-
-\captura[0.65\linewidth]{05a_validacion_tablas.png}{\bd{sql/99_validacion.sql}: tablas, motor y cotejamiento\label{fig:val_tablas}}
-\captura{05b_validacion_fk.png}{\bd{sql/99_validacion.sql}: llaves foráneas de la tabla de hechos\label{fig:val_fk}}
-\captura[0.56\linewidth]{05c_validacion_resumen.png}{\bd{sql/99_validacion.sql}: resumen de columnas y llaves por tabla\label{fig:val_resumen}}

@@ -1,0 +1,334 @@
+% =============================================================================
+% Guía de Ejecución en Windows del script del Datawarehouse (Avance N°1)
+% Documento aparte para que el profesor replique la creación del modelo.
+% Compilar con: latexmk guia_ejecucion_windows.tex (o lualatex/pdflatex dos
+% veces). Es autónomo: si img/logo_utem.png no está, el encabezado sale sin logo.
+% Los resultados esperados (filas por consulta) se verificaron en
+% PostgreSQL 17.11 el 05-11-2026 (ver docs/bitacora.md).
+% =============================================================================
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+\fi
+\usepackage[spanish,es-tabla,es-noshorthands,es-lcroman]{babel}
+\usepackage[letterpaper,left=2.5cm,right=2.5cm,bottom=2.5cm,top=3.6cm,
+            headheight=44pt,headsep=12pt]{geometry}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\definecolor{azulutem}{HTML}{004EAA}
+\definecolor{verdeutem}{HTML}{78BF26}
+% Enlaces en negro, sin recuadros; siguen siendo pulsables en el PDF
+\hypersetup{colorlinks=true, linkcolor=black, citecolor=black,
+            urlcolor=black, filecolor=black,
+            pdftitle={Guía de Ejecución en Windows: Datawarehouse de Transportes Rapiditos S.A.},
+            pdfauthor={Grupo 1, Inteligencia de Negocios, UTEM}}
+\setlength{\emergencystretch}{2em}
+
+% Nombres de archivos, tablas y comandos cortos en monoespaciado
+\newcommand{\bd}[1]{\texttt{\detokenize{#1}}}
+
+% Bloques de comandos para copiar y pegar
+\lstdefinestyle{consola}{
+  basicstyle=\ttfamily\small, columns=fullflexible, keepspaces=true,
+  frame=single, rulecolor=\color{gray!60}, backgroundcolor=\color{gray!6},
+  breaklines=true, showstringspaces=false, upquote=true,
+  aboveskip=4pt, belowskip=8pt}
+\lstset{style=consola}
+
+\newcommand{\institucion}{%
+  {\renewcommand{\arraystretch}{1}%
+  \begin{tabular}{@{}m{1.0cm}@{\hspace{0.5em}}m{10cm}@{}}
+    \IfFileExists{img/logo_utem.png}{\includegraphics[height=1.2cm]{img/logo_utem.png}}{} &
+    \small Universidad Tecnológica Metropolitana\newline
+    Facultad de Ingeniería\newline
+    Escuela de Informática y Computación
+  \end{tabular}}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\institucion}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+\begin{center}
+  {\Large\bfseries Guía de Ejecución en Windows\par}
+  \medskip
+  {\large Script del Datawarehouse de Transportes Rapiditos S.A.\par}
+  \medskip
+  Inteligencia de Negocios (INFB8101), Sección 412 -- Proyecto Semestral, Avance N°1\par
+  Grupo 1: Ignacio Ahumada Poque, Leonardo Solís Ortiz, Vicente Fuentes
+  Rodríguez y Gabriel García Vega\par
+  Noviembre de 2026
+\end{center}
+
+\section{Propósito}
+
+Esta guía permite replicar en Windows la creación del modelo multidimensional
+estrella del Avance N°1 y comprobar el resultado. El script \bd{01_ddl.sql}
+está escrito para \textbf{PostgreSQL 17} (se probó en la versión 17.11) y
+crea, \emph{sin datos}, el esquema \bd{dwh} con la tabla de hechos
+\bd{fact_venta} y sus seis dimensiones.
+
+Los dos scripts son \textbf{autónomos}: no leen ni escriben archivos, no
+dependen de otros archivos y funcionan desde cualquier carpeta. Basta con
+guardar \bd{01_ddl.sql} y \bd{99_validacion.sql} en una misma carpeta
+cualquiera del equipo, por ejemplo \emph{Descargas}. En esta guía, esa carpeta
+se llama \emph{carpeta de los scripts}.
+
+\begin{table}[H]
+  \centering
+  \caption{Archivos que se usan en esta guía}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.4cm}X@{}}
+    \toprule
+    \textbf{Archivo} & \textbf{Contenido} \\
+    \midrule
+    \bd{01_ddl.sql} & Crea el esquema \bd{dwh}: 6 dimensiones y la tabla de
+      hechos, con sus llaves, reglas \bd{CHECK}, índices y comentarios \\
+    \bd{99_validacion.sql} & 9 consultas al catálogo que verifican lo creado \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Se ofrecen dos opciones. La \textbf{opción A} instala PostgreSQL y pgAdmin
+directamente en Windows y es la más simple. La \textbf{opción B} no instala
+PostgreSQL: lo ejecuta en un contenedor de Docker con la misma imagen
+(\bd{postgres:17.11}) que usó el grupo.
+
+\textbf{Importante:} el script no crea bases de datos ni usuarios. Se ejecuta
+dentro de una base existente y, al comenzar, \emph{borra y vuelve a crear} el
+esquema \bd{dwh} de esa base. Por eso se recomienda ejecutarlo en una base
+nueva y dedicada, como la base \bd{rapiditos} de esta guía.
+
+\section{Opción A: PostgreSQL 17 y pgAdmin instalados en Windows}
+
+\subsection*{A.1. Instalar PostgreSQL 17}
+
+\begin{enumerate}[leftmargin=*]
+  \item Descargar el instalador para Windows desde
+        \url{https://www.postgresql.org/download/windows/} (enlace
+        \emph{Download the installer}, de EDB). Elegir la versión
+        \textbf{17.x} para \emph{Windows x86-64}.
+  \item Ejecutar el instalador. En \emph{Select Components} dejar marcados
+        \emph{PostgreSQL Server}, \emph{pgAdmin 4} y \emph{Command Line Tools}.
+        \emph{Stack Builder} no es necesario.
+  \item Definir la contraseña del superusuario \bd{postgres} y anotarla.
+  \item Mantener el puerto \bd{5432}. Si XAMPP está instalado no hay conflicto,
+        porque MySQL/MariaDB usa el puerto 3306.
+  \item Aceptar la configuración regional por omisión y terminar la
+        instalación. Al final se puede desmarcar la opción de abrir
+        Stack Builder.
+\end{enumerate}
+
+\subsection*{A.2. Crear la base de datos}
+
+\begin{enumerate}[leftmargin=*]
+  \item Abrir \textbf{pgAdmin 4} desde el menú Inicio. En el panel izquierdo,
+        expandir \emph{Servers} \textrightarrow{} \emph{PostgreSQL 17} e
+        ingresar la contraseña de \bd{postgres}.
+  \item Clic derecho en \emph{Databases} \textrightarrow{} \emph{Create}
+        \textrightarrow{} \emph{Database\ldots}. En \emph{Database} escribir
+        \bd{rapiditos}. En la pestaña \emph{Definition}, verificar que
+        \emph{Encoding} sea \bd{UTF8}. Presionar \emph{Save}.
+\end{enumerate}
+
+\subsection*{A.3. Ejecutar el script}
+
+\begin{enumerate}[leftmargin=*]
+  \item Seleccionar la base \bd{rapiditos} en el panel izquierdo y abrir
+        \emph{Tools} \textrightarrow{} \emph{Query Tool}.
+  \item Con el ícono de carpeta (\emph{Open File}) de la barra del Query Tool,
+        abrir \bd{01_ddl.sql} desde la carpeta de los scripts.
+  \item Sin seleccionar texto, presionar \textbf{F5}: se ejecuta el script
+        completo. En la pestaña \emph{Messages} debe aparecer \bd{COMMIT} y
+        \emph{Query returned successfully}. La primera vez aparece además el
+        aviso \bd{NOTICE: schema "dwh" does not exist, skipping} (o su
+        equivalente en español), que es normal: el script intenta borrar un
+        esquema que todavía no existe.
+  \item Clic derecho en la base \bd{rapiditos} \textrightarrow{}
+        \emph{Refresh}. En \emph{Schemas} \textrightarrow{} \emph{dwh}
+        \textrightarrow{} \emph{Tables} deben aparecer las 7 tablas.
+\end{enumerate}
+
+El script se puede ejecutar todas las veces que se quiera: cada vez deja el
+mismo resultado. Si una sentencia fallara, la transacción completa se
+revierte y no queda nada a medias.
+
+\subsection*{A.4. Verificar el resultado}
+
+\begin{enumerate}[leftmargin=*]
+  \item En el Query Tool, abrir \bd{99_validacion.sql} desde la carpeta de los
+        scripts.
+  \item pgAdmin muestra solo el resultado de la última consulta cuando se
+        ejecuta un archivo completo. Para ver cada una, seleccionar con el
+        mouse el texto de una consulta (desde su comentario numerado hasta el
+        punto y coma) y presionar \textbf{F5}: se ejecuta solo la selección.
+  \item Comparar la cantidad de filas de cada consulta con la
+        Tabla~\ref{tab:esperado}.
+\end{enumerate}
+
+\begin{table}[H]
+  \centering
+  \caption{Resultado esperado de \bd{99_validacion.sql}}
+  \label{tab:esperado}
+  \small
+  \begin{tabularx}{\linewidth}{@{}cXc@{}}
+    \toprule
+    \textbf{N°} & \textbf{Consulta} & \textbf{Filas} \\
+    \midrule
+    1 & Versión del motor (PostgreSQL 17) y codificación de la base (UTF8) & 1 \\
+    2 & Tablas del esquema \bd{dwh} con su comentario & 7 \\
+    3 & Columnas de cada tabla & 58 \\
+    4 & Llaves primarias (7) y valores únicos (7) & 14 \\
+    5 & Llaves foráneas, todas en \bd{fact_venta} & 7 \\
+    6 & Restricciones \bd{CHECK} & 20 \\
+    7 & Índices: 7 de llaves primarias, 7 de valores únicos y 7 sobre llaves foráneas & 21 \\
+    8 & Resumen por tabla (columnas y llaves que salen y llegan a cada tabla) & 7 \\
+    9 & Restricciones e índices que no siguen la norma de nomenclatura & \textbf{0} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection*{A.5. Alternativa por línea de comandos (psql)}
+
+El instalador deja \bd{psql} en
+\lstinline[basicstyle=\ttfamily]|C:\Program Files\PostgreSQL\17\bin|. Para
+abrir PowerShell en la carpeta de los scripts, abrir esa carpeta en el
+Explorador de archivos, escribir \bd{powershell} en la barra de direcciones y
+presionar Enter. Luego:
+
+\begin{lstlisting}
+chcp 65001
+$env:PGCLIENTENCODING = "UTF8"
+$psql = "C:\Program Files\PostgreSQL\17\bin\psql.exe"
+& $psql -U postgres -d rapiditos -v ON_ERROR_STOP=1 -f 01_ddl.sql
+& $psql -U postgres -d rapiditos -P pager=off -f 99_validacion.sql
+\end{lstlisting}
+
+\bd{psql} pide la contraseña de \bd{postgres}. Las dos primeras líneas hacen
+que la consola muestre bien las tildes; \bd{psql} puede advertir que la página
+de códigos de la consola difiere de la de Windows, y ese aviso se puede
+ignorar. El script fija por sí mismo la codificación UTF-8 en su primera
+línea, por lo que los datos se guardan bien aunque se omitan esas dos líneas.
+La opción \bd{-P pager=off} evita que la salida larga se detenga esperando una
+tecla. A diferencia de pgAdmin, \bd{psql} muestra el resultado de las 9
+consultas de validación seguidas.
+
+\section{Opción B: PostgreSQL en Docker, sin instalarlo}
+
+Requiere \textbf{Docker Desktop} para Windows, instalado según
+\url{https://docs.docker.com/desktop/setup/install/windows-install/}, y abierto
+antes de continuar. No se necesita ningún otro archivo: los comandos usan solo
+los dos scripts.
+
+\subsection*{B.1. Crear el contenedor con la base de datos}
+
+Abrir PowerShell en la carpeta de los scripts, como en el paso A.5, y
+ejecutar el comando siguiente, reemplazando \bd{una_clave} por una contraseña a
+elección. El acento grave (\lstinline|`|) al final de una línea es la
+continuación de línea de PowerShell.
+
+\begin{lstlisting}
+docker run --name rapiditos-postgres `
+    -e POSTGRES_PASSWORD=una_clave -e POSTGRES_DB=rapiditos `
+    -p 127.0.0.1:5432:5432 -d postgres:17.11
+\end{lstlisting}
+
+La primera vez se descarga la imagen \bd{postgres:17.11}. La base
+\bd{rapiditos} se crea sola. Antes de seguir hay que esperar a que el servidor
+termine de iniciarse: repetir el comando siguiente hasta que la última línea
+diga \bd{database system is ready to accept connections}.
+
+\begin{lstlisting}
+docker logs rapiditos-postgres
+\end{lstlisting}
+
+\subsection*{B.2. Ejecutar el script y verificar}
+
+Los scripts se copian al contenedor y se ejecutan con el \bd{psql} que trae la
+imagen; dentro del contenedor no se pide contraseña.
+
+% El bloque va en una minipage para que no se parta entre dos páginas
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}
+chcp 65001
+docker cp 01_ddl.sql rapiditos-postgres:/tmp/01_ddl.sql
+docker cp 99_validacion.sql rapiditos-postgres:/tmp/99_validacion.sql
+docker exec rapiditos-postgres psql -U postgres -d rapiditos `
+    -v ON_ERROR_STOP=1 -f /tmp/01_ddl.sql
+docker exec rapiditos-postgres psql -U postgres -d rapiditos `
+    -P pager=off -f /tmp/99_validacion.sql
+\end{lstlisting}
+\end{minipage}
+
+La ejecución del script debe terminar en \bd{COMMIT}, y la validación debe
+coincidir con la Tabla~\ref{tab:esperado}. \bd{chcp 65001} solo sirve para que
+la consola muestre bien las tildes.
+
+Si además se quiere revisar la base con pgAdmin (por ejemplo, el de la
+opción A), se registra un servidor con host \bd{localhost}, el puerto
+publicado (\bd{5432}), usuario \bd{postgres} y la contraseña elegida en el
+paso B.1. Al terminar, \bd{docker rm -f rapiditos-postgres} elimina el
+contenedor junto con la base.
+
+\section{Problemas frecuentes}
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.4cm}X@{}}
+    \toprule
+    \textbf{Síntoma} & \textbf{Solución} \\
+    \midrule
+    \emph{password authentication failed for user "postgres"}
+      & Usar la contraseña definida al instalar PostgreSQL (paso A.1). \\
+    \emph{psql no se reconoce como comando}
+      & Usar la ruta completa de \bd{psql.exe}, como en el paso A.5. \\
+    \emph{No such file or directory} al ejecutar \bd{psql} o \bd{docker cp}
+      & PowerShell no está en la carpeta de los scripts: abrirlo desde esa
+        carpeta (paso A.5) o escribir la ruta completa de cada archivo entre
+        comillas. \\
+    El puerto 5432 está ocupado durante la instalación
+      & Aceptar el puerto que proponga el instalador; pgAdmin lo usa solo. En
+        \bd{psql}, agregar \bd{-p} y el número de puerto. \\
+    pgAdmin muestra una sola tabla de resultados al validar
+      & Es el comportamiento normal con un archivo completo: ejecutar cada
+        consulta por separado, como indica el paso A.4. \\
+    En la opción B, \emph{port is already allocated}
+      & El puerto 5432 ya lo usa otro PostgreSQL, por ejemplo el de la
+        opción A. Ejecutar \bd{docker rm -f rapiditos-postgres} y repetir el
+        paso B.1 con \bd{-p 127.0.0.1:5433:5432}. \\
+    En la opción B, \emph{the database system is starting up} o
+    \emph{is shutting down}
+      & El servidor todavía se está iniciando: esperar el mensaje indicado en
+        el paso B.1 y repetir el comando. \\
+    En la opción B, \emph{The container name "/rapiditos-postgres" is already
+    in use}
+      & Ya existe un contenedor de una prueba anterior: eliminarlo con
+        \bd{docker rm -f rapiditos-postgres} y repetir el paso B.1. \\
+    \bd{docker} no responde o no encuentra el motor
+      & Abrir Docker Desktop y esperar a que indique que está en ejecución. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\end{document}

@@ -1,0 +1,175 @@
+% =============================================================================
+% Anexo A: Diccionario de Datos.
+% Generado por herramientas/generar_diccionario.py desde el catálogo de
+% PostgreSQL. No editar a mano: volver a ejecutar el script.
+% =============================================================================
+
+\subsubsection{Tabla \bd{fact_venta}}
+
+Hechos de venta: una fila por transacción de compra de un cliente. \textbf{Origen:} Transacciones de las seis fuentes públicas de la Sección~\ref{sec:fuentes} (una fila por pasaje, viaje, envío o pedido), asignadas a clientes sintéticos.
+
+\begin{table}[H]
+  \centering
+  \caption{Diccionario de datos de \bd{fact_venta}}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.0cm}lcl>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Nulo} & \textbf{Clave} & \textbf{Descripción} \\
+    \midrule
+    \bd{id_venta} & BIGINT & No & PK & PK. Llave sustituta \\
+    \bd{id_tiempo} & INTEGER & No & FK & FK a dim\_tiempo (fecha de la compra) \\
+    \bd{id_cliente} & INTEGER & No & FK & FK a dim\_cliente \\
+    \bd{id_servicio} & INTEGER & No & FK & FK a dim\_servicio \\
+    \bd{id_zona_origen} & INTEGER & No & FK & FK a dim\_zona, rol origen \\
+    \bd{id_zona_destino} & INTEGER & No & FK & FK a dim\_zona, rol destino \\
+    \bd{id_canal_venta} & INTEGER & No & FK & FK a dim\_canal\_venta \\
+    \bd{id_medio_pago} & INTEGER & No & FK & FK a dim\_medio\_pago \\
+    \bd{numero_transaccion} & VARCHAR(30) & No & UQ & Dimensión degenerada: id del sistema de origen, prefijado por línea \\
+    \bd{edad_cliente} & SMALLINT & Sí & CK & Edad al momento de la compra (no aditiva; NULL para empresas) \\
+    \bd{cantidad} & INTEGER & No & CK & Medida aditiva: pasajes, bultos o unidades \\
+    \bd{monto_bruto} & NUMERIC(12,2) & No & CK & Medida aditiva: monto antes de descuento (CLP) \\
+    \bd{monto_descuento} & NUMERIC(12,2) & No & CK & Medida aditiva: descuento aplicado (CLP) \\
+    \bd{monto_neto} & NUMERIC(12,2) & No & CK & Medida aditiva: monto pagado (CLP) = bruto - descuento \\
+    \bd{distancia_km} & NUMERIC(10,2) & Sí & CK & Medida aditiva: distancia recorrida en km \\
+    \bd{duracion_minutos} & INTEGER & Sí & CK & Medida aditiva: duración del servicio en minutos \\
+    \bd{peso_kg} & NUMERIC(10,2) & Sí & CK & Medida aditiva: peso en kg (solo logística y delivery) \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsubsection{Tabla \bd{dim_tiempo}}
+
+Dimensión tiempo con granularidad diaria. \textbf{Origen:} Se genera con un script SQL (\bd{generate_series}) para 2023 a 2025; no requiere fuente externa.
+
+\begin{table}[H]
+  \centering
+  \caption{Diccionario de datos de \bd{dim_tiempo}}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.0cm}lcl>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Nulo} & \textbf{Clave} & \textbf{Descripción} \\
+    \midrule
+    \bd{id_tiempo} & INTEGER & No & PK, CK & PK. Fecha en formato AAAAMMDD (ej. 20250314) \\
+    \bd{fecha} & DATE & No & UQ & Fecha calendario \\
+    \bd{dia} & SMALLINT & No & CK & Día del mes (1-31) \\
+    \bd{dia_semana} & SMALLINT & No & CK & 1 = lunes … 7 = domingo (ISO) \\
+    \bd{nombre_dia} & VARCHAR(10) & No &  & Lunes … Domingo \\
+    \bd{es_fin_de_semana} & BOOLEAN & No & CK & TRUE si es sábado o domingo \\
+    \bd{semana_anio} & SMALLINT & No & CK & Semana ISO del año (1-53) \\
+    \bd{mes} & SMALLINT & No & CK & Mes (1-12) \\
+    \bd{nombre_mes} & VARCHAR(10) & No &  & Enero … Diciembre \\
+    \bd{trimestre} & SMALLINT & No & CK & Trimestre (1-4) \\
+    \bd{semestre} & SMALLINT & No & CK & Semestre (1-2) \\
+    \bd{anio} & SMALLINT & No & CK & Año \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsubsection{Tabla \bd{dim_cliente}}
+
+Dimensión cliente unificada entre las seis líneas de negocio. \textbf{Origen:} Sintética: clientes residentes en Chile, con la distribución por comuna, sexo y edad del Censo de Población y Vivienda 2024.
+
+\begin{table}[H]
+  \centering
+  \caption{Diccionario de datos de \bd{dim_cliente}}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.0cm}lcl>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Nulo} & \textbf{Clave} & \textbf{Descripción} \\
+    \midrule
+    \bd{id_cliente} & INTEGER & No & PK & PK. Llave sustituta \\
+    \bd{codigo_cliente} & VARCHAR(20) & No & UQ & Llave natural (RUT o documento, unificado entre líneas) \\
+    \bd{nombre_cliente} & VARCHAR(100) & No &  & Nombre o razón social \\
+    \bd{genero} & VARCHAR(20) & Sí &  & Género declarado (NULL para empresas) \\
+    \bd{fecha_nacimiento} & DATE & Sí &  & Fecha de nacimiento (NULL para empresas) \\
+    \bd{tipo_cliente} & VARCHAR(20) & No & CK & persona o empresa \\
+    \bd{comuna_residencia} & VARCHAR(60) & Sí &  & Comuna de residencia \\
+    \bd{region_residencia} & VARCHAR(60) & Sí &  & Región de residencia \\
+    \bd{pais_residencia} & VARCHAR(60) & No &  & País de residencia \\
+    \bd{fecha_registro} & DATE & Sí &  & Fecha de alta como cliente \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsubsection{Tabla \bd{dim_servicio}}
+
+Dimensión servicio: línea de negocio y medio de transporte. \textbf{Origen:} Catálogo de los servicios de cada línea de negocio, con los atributos que informa cada fuente (tipo y clase de servicio, medio de transporte).
+
+\begin{table}[H]
+  \centering
+  \caption{Diccionario de datos de \bd{dim_servicio}}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.0cm}lcl>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Nulo} & \textbf{Clave} & \textbf{Descripción} \\
+    \midrule
+    \bd{id_servicio} & INTEGER & No & PK & PK. Llave sustituta \\
+    \bd{codigo_servicio} & VARCHAR(20) & No & UQ & Llave natural \\
+    \bd{linea_negocio} & VARCHAR(50) & No & CK & Una de las 6 líneas de negocio del enunciado (nombre literal) \\
+    \bd{medio_transporte} & VARCHAR(30) & No &  & bus, tren, taxi, camión, avión, moto/bicicleta \\
+    \bd{tipo_servicio} & VARCHAR(20) & No & CK & pasajeros o carga \\
+    \bd{clase_servicio} & VARCHAR(30) & No &  & Ej. económica, ejecutiva, express, estándar \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsubsection{Tabla \bd{dim_zona}}
+
+Dimensión zona geográfica, de rol doble (origen y destino). \textbf{Origen:} Tablas de zonas de cada fuente (zonas de taxi de Nueva York, puntos de ANTT, estaciones del Reino Unido, aeropuertos de EE.UU.) y comunas de Chile del Censo 2024.
+
+\begin{table}[H]
+  \centering
+  \caption{Diccionario de datos de \bd{dim_zona}}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.0cm}lcl>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Nulo} & \textbf{Clave} & \textbf{Descripción} \\
+    \midrule
+    \bd{id_zona} & INTEGER & No & PK & PK. Llave sustituta \\
+    \bd{codigo_zona} & VARCHAR(20) & No & UQ & Llave natural \\
+    \bd{comuna} & VARCHAR(60) & No &  & Comuna (No aplica en destinos internacionales) \\
+    \bd{ciudad} & VARCHAR(60) & No &  & Ciudad \\
+    \bd{region} & VARCHAR(60) & No &  & Región \\
+    \bd{pais} & VARCHAR(60) & No &  & País \\
+    \bd{continente} & VARCHAR(30) & No &  & Continente \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsubsection{Tabla \bd{dim_canal_venta}}
+
+Dimensión canal de venta. \textbf{Origen:} Canales de compra informados por las fuentes, normalizados a un catálogo común.
+
+\begin{table}[H]
+  \centering
+  \caption{Diccionario de datos de \bd{dim_canal_venta}}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.0cm}lcl>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Nulo} & \textbf{Clave} & \textbf{Descripción} \\
+    \midrule
+    \bd{id_canal_venta} & INTEGER & No & PK & PK. Llave sustituta \\
+    \bd{codigo_canal_venta} & VARCHAR(20) & No & UQ & Llave natural \\
+    \bd{nombre_canal_venta} & VARCHAR(40) & No &  & app, web, boletería, call center, convenio empresa \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsubsection{Tabla \bd{dim_medio_pago}}
+
+Dimensión medio de pago. \textbf{Origen:} Tipos de pago informados por las fuentes, normalizados a un catálogo común.
+
+\begin{table}[H]
+  \centering
+  \caption{Diccionario de datos de \bd{dim_medio_pago}}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.0cm}lcl>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Nulo} & \textbf{Clave} & \textbf{Descripción} \\
+    \midrule
+    \bd{id_medio_pago} & INTEGER & No & PK & PK. Llave sustituta \\
+    \bd{codigo_medio_pago} & VARCHAR(20) & No & UQ & Llave natural \\
+    \bd{nombre_medio_pago} & VARCHAR(40) & No &  & efectivo, débito, crédito, transferencia, billetera digital \\
+    \bottomrule
+  \end{tabularx}
+\end{table}

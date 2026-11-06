@@ -1,0 +1,175 @@
+% =============================================================================
+% Capítulo 5: Scripts del Datawarehouse
+% Entregable 2 del Avance N°1: script SQL de creación del modelo multidimensional.
+% Las cifras de la Tabla de verificación se obtuvieron del catálogo de
+% PostgreSQL el 05-11-2026 (ver docs/bitacora.md).
+% =============================================================================
+\section{Scripts del Datawarehouse}
+\label{sec:scripts}
+
+Este capítulo presenta los scripts que crean y verifican el Datawarehouse. En
+el Avance N°1 el script crea la estructura del modelo multidimensional
+\emph{sin datos}; los scripts de carga se agregan en el Avance N°2.
+
+\subsection{Scripts Entregados}
+
+\begin{table}[H]
+  \centering
+  \caption{Scripts del Datawarehouse y de apoyo}
+  \label{tab:scripts}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.4cm}
+                                  >{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Archivo} & \textbf{Propósito} \\
+    \midrule
+    \bd{sql/01_ddl.sql} & Crea el esquema \bd{dwh} con las seis dimensiones,
+      la tabla de hechos, sus restricciones, índices y comentarios \\
+    \bd{sql/99_validacion.sql} & Consulta el catálogo de PostgreSQL para
+      verificar tablas, columnas, llaves, restricciones, índices y
+      nomenclatura \\
+    \bd{tests/test_ddl.py} & 29 pruebas automáticas (pytest) que crean una
+      base de prueba, ejecutan el script dos veces y comparan el resultado con
+      el diseño \\
+    \bd{docker-compose.yml} & Define los servicios PostgreSQL 17 y pgAdmin 4 \\
+    \bd{herramientas/capturar_pgadmin.py} & Ejecuta el script y la validación
+      en pgAdmin y toma las capturas del informe (Playwright) \\
+    \bd{herramientas/generar_diccionario.py} & Genera el diccionario de datos
+      del Anexo~A desde el catálogo de la base \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Script de Creación del Modelo}
+
+El script \bd{sql/01_ddl.sql} está escrito para PostgreSQL 17 y se ejecuta de
+corrido, sin intervención, tanto con \bd{psql} como en el Query Tool de
+pgAdmin. Su estructura es la siguiente:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Codificación:} \bd{SET client_encoding = 'UTF8'}. El archivo
+        está en UTF-8, y esta línea asegura que las tildes de los comentarios
+        y de las reglas se guarden bien aunque el script se ejecute con
+        \bd{psql} desde una consola de Windows, que usa otra codificación.
+  \item \textbf{Inicio de la transacción:} \bd{BEGIN}, seguido de
+        \bd{DROP SCHEMA IF EXISTS dwh CASCADE} y \bd{CREATE SCHEMA dwh}. El
+        script es \emph{idempotente}: se puede ejecutar las veces que sea
+        necesario y siempre deja el mismo resultado.
+  \item \textbf{Dimensiones:} las seis tablas \bd{dim_}, cada una con su llave
+        primaria, su llave natural única y sus reglas \bd{CHECK}.
+  \item \textbf{Tabla de hechos:} \bd{fact_venta}, con sus siete llaves
+        foráneas (reglas \bd{ON DELETE RESTRICT} y \bd{ON UPDATE RESTRICT}) y
+        las reglas de sus medidas.
+  \item \textbf{Comentarios:} \bd{COMMENT ON} en el esquema, las 7 tablas y
+        las 58 columnas (66 comentarios), que documentan el modelo dentro de la
+        propia base.
+  \item \textbf{Índices:} uno por cada llave foránea de \bd{fact_venta}, porque
+        PostgreSQL no los crea por su cuenta y aceleran los cruces con las
+        dimensiones.
+  \item \textbf{Fin de la transacción:} \bd{COMMIT}. Si cualquier sentencia
+        falla, la transacción se revierte completa y no queda nada a medias.
+\end{enumerate}
+
+La Figura~\ref{fig:ddl_fact} muestra la creación de la tabla de hechos. El
+script completo se entrega en el repositorio del proyecto.
+
+\begin{figure}[H]
+  \centering
+  \caption{Fragmento de \bd{sql/01_ddl.sql}: creación de la tabla de hechos \bd{fact_venta}}
+  \label{fig:ddl_fact}
+  \sinunicode{\lstinputlisting[style=sql, firstline=212, lastline=255,
+                   firstnumber=212]{../sql/01_ddl.sql}}
+\end{figure}
+
+La Figura~\ref{fig:ddl_ejecutado} muestra la ejecución del script en el Query
+Tool de pgAdmin, y la Figura~\ref{fig:estructura_fact} la estructura de la
+tabla de hechos resultante.
+
+\captura{02_pgadmin_ddl_ejecutado.png}{Ejecución de \bd{sql/01_ddl.sql} en el Query Tool de pgAdmin\label{fig:ddl_ejecutado}}
+\captura{03_estructura_fact_venta.png}{Estructura de la tabla de hechos \bd{fact_venta} en pgAdmin\label{fig:estructura_fact}}
+
+\subsection{Reglas de Integridad}
+
+Además de las llaves, el script declara 20 restricciones \bd{CHECK} que la
+base de datos hace cumplir en cada carga. Así, el ETL no puede dejar datos
+inconsistentes en el Datawarehouse:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Montos:} el monto neto es igual al bruto menos el descuento, y
+        el descuento está entre cero y el monto bruto.
+  \item \textbf{Medidas no negativas:} la cantidad es de al menos una unidad;
+        distancia, duración y peso no pueden ser negativos, y la edad del
+        cliente está entre 0 y 120 años.
+  \item \textbf{Dimensión tiempo:} la llave AAAAMMDD y cada atributo derivado
+        (día, día de la semana, fin de semana, semana del año, mes, trimestre,
+        semestre y año) deben coincidir con la fecha.
+  \item \textbf{Dominios cerrados:} el tipo de cliente (persona o empresa), el
+        tipo de servicio (pasajeros o carga) y la línea de negocio, que solo
+        acepta los seis nombres del enunciado.
+\end{itemize}
+
+\subsection{Entorno de Ejecución}
+
+El Datawarehouse corre en PostgreSQL 17.11 dentro de un contenedor Docker,
+junto con pgAdmin 4 (Figura~\ref{fig:docker}). El esquema estrella creado por
+el script se visualiza en el ERD Tool de pgAdmin
+(Figura~\ref{fig:erd}).
+
+\captura{01_docker_servicios_activos.png}{Salida de \bd{docker compose ps}: PostgreSQL 17 y pgAdmin activos\label{fig:docker}}
+\captura{04_erd_esquema_estrella.png}{Esquema estrella en el ERD Tool de pgAdmin\label{fig:erd}}
+
+\subsection{Verificación del Datawarehouse}
+\label{sec:verificacion}
+
+El resultado del script se verificó de tres formas: con las consultas de
+\bd{sql/99_validacion.sql}, con las 29 pruebas automáticas de
+\bd{tests/test_ddl.py} y ejecutando el script dos veces seguidas, para
+comprobar que es idempotente. La Tabla~\ref{tab:verificacion} resume los
+elementos del esquema \bd{dwh} consultados en el catálogo de PostgreSQL.
+
+\begin{table}[H]
+  \centering
+  \caption{Elementos del esquema \bd{dwh} verificados en el catálogo}
+  \label{tab:verificacion}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X cc@{}}
+    \toprule
+    \textbf{Elemento} & \textbf{Esperado según el diseño} & \textbf{Obtenido} \\
+    \midrule
+    Tablas (1 de hechos y 6 dimensiones)    & 7  & 7  \\
+    Columnas                                & 58 & 58 \\
+    Llaves primarias                        & 7  & 7  \\
+    Restricciones \bd{UNIQUE}               & 7  & 7  \\
+    Llaves foráneas (todas en \bd{fact_venta}) & 7  & 7  \\
+    Restricciones \bd{CHECK}                & 20 & 20 \\
+    Índices sobre llaves foráneas           & 7  & 7  \\
+    Comentarios (esquema, tablas y columnas) & 66 & 66 \\
+    Restricciones o índices fuera de la norma de nomenclatura & 0 & 0 \\
+    Filas cargadas (Avance N°1, sin datos)  & 0  & 0  \\
+    \bottomrule
+  \end{tabularx}
+  \nota{Consultas ejecutadas en PostgreSQL 17.11 el 05-11-2026.}
+\end{table}
+
+Las pruebas automáticas crean una base de prueba aparte, ejecutan el script
+dos veces y comparan la base resultante con el diseño de
+\bd{docs/modelo_dimensional.md}: tablas, columnas, tipos, llaves, reglas e
+índices. También intentan insertar datos inválidos, como un monto neto que no
+cuadra con el bruto o una venta con un cliente inexistente, y comprueban que la
+base los rechaza. Las 29 pruebas se aprobaron.
+
+Las figuras siguientes son resultados de \bd{sql/99_validacion.sql}. La
+Figura~\ref{fig:val_tablas} muestra las siete tablas del esquema con su
+comentario. La Figura~\ref{fig:val_fk} muestra las siete llaves foráneas de
+\bd{fact_venta}, todas con nombre normado y regla \bd{RESTRICT}. La
+Figura~\ref{fig:val_resumen} confirma la estrella: solo la tabla de hechos
+tiene llaves foráneas salientes, y \bd{dim_zona} es referenciada dos veces
+(origen y destino). La Figura~\ref{fig:val_checks} lista las reglas de
+integridad, y la Figura~\ref{fig:val_nomenclatura} muestra que ninguna
+restricción ni índice queda fuera de la norma de nomenclatura.
+
+\captura{05a_validacion_tablas.png}{\bd{sql/99_validacion.sql}: tablas del esquema \bd{dwh}\label{fig:val_tablas}}
+\captura{05b_validacion_fk.png}{\bd{sql/99_validacion.sql}: llaves foráneas de la tabla de hechos\label{fig:val_fk}}
+\captura{05c_validacion_resumen.png}{\bd{sql/99_validacion.sql}: resumen de columnas y llaves por tabla\label{fig:val_resumen}}
+\captura{05d_validacion_checks.png}{\bd{sql/99_validacion.sql}: restricciones \bd{CHECK}\label{fig:val_checks}}
+\captura{05e_validacion_nomenclatura.png}{\bd{sql/99_validacion.sql}: control de nomenclatura (0 filas fuera de norma)\label{fig:val_nomenclatura}}

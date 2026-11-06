@@ -1,0 +1,51 @@
+# Servicios del proyecto: PostgreSQL 17 (DWH) y pgAdmin 4 (administración web).
+# Las credenciales se leen de .env (copiar desde .env.example).
+#
+#   Levantar:  docker compose up -d
+#   Estado:    docker compose ps
+#   Detener:   docker compose down        (los datos se conservan en los volúmenes)
+#   Borrar:    docker compose down -v     (elimina también los datos)
+#
+# Los puertos se publican solo en 127.0.0.1: la base no queda expuesta a la red.
+name: rapiditos
+
+services:
+  postgres:
+    image: postgres:17.11
+    environment:
+      POSTGRES_DB: ${DB_NAME:-rapiditos}
+      POSTGRES_USER: ${DB_USER:-rapiditos}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Falta DB_PASSWORD en .env}
+      TZ: America/Santiago
+      PGTZ: America/Santiago
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+    volumes:
+      - datos_postgres:/var/lib/postgresql/data
+      # Los scripts de sql/ quedan disponibles en /sql dentro del contenedor (solo lectura)
+      - ./sql:/sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  pgadmin:
+    image: dpage/pgadmin4:9.18.0
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@rapiditos.cl}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?Falta PGADMIN_PASSWORD en .env}
+      PGADMIN_CONFIG_UPGRADE_CHECK_ENABLED: "False"
+    ports:
+      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - datos_pgadmin:/var/lib/pgadmin
+      # Conexión al servidor "postgres" precargada en pgAdmin
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  datos_postgres:
+  datos_pgadmin:

@@ -1,0 +1,47 @@
+% =============================================================================
+% Resumen Ejecutivo (sin número, antes del primer capítulo)
+% =============================================================================
+\section*{Resumen Ejecutivo}
+\phantomsection
+\addcontentsline{toc}{section}{Resumen Ejecutivo}
+
+Transportes Rapiditos S.A. es una compañía internacional de transportes con
+seis líneas de negocio: buses interurbanos, trenes, radio taxis, logística y
+distribución, aerolíneas y delivery. Cada línea registra sus ventas por
+separado, por lo que la compañía no puede saber quiénes son sus clientes en
+conjunto ni cómo se comportan cuando compran en más de una línea. El caso
+plantea fusionar la información de las líneas para obtener una vista única del
+cliente y, con ella, determinar qué tipos de clientes tiene la compañía y su
+comportamiento anual en los últimos tres años.
+
+Para resolverlo, el Grupo 1 propone una Arquitectura de Solución de
+Inteligencia de Negocios compuesta por una capa de extracción en Python, un
+proceso ETL en Apache Hop, un Datawarehouse en PostgreSQL 17, un cubo
+semántico en Cube y un dashboard en Streamlit. La reportería se orienta a un
+perfil táctico: la gerencia comercial y de marketing.
+
+El Datawarehouse sigue la metodología de Kimball y un modelo estrella. El
+proceso de negocio son las compras de servicios, y el grano es una fila por
+cada transacción de compra de un cliente. La tabla de hechos
+\bd{fact_venta} reúne ocho medidas (cantidad; montos bruto, de descuento y
+neto; distancia; duración; peso, y edad del cliente) y se relaciona con seis
+dimensiones: tiempo, cliente, servicio, zona (de origen y de
+destino), canal de venta y medio de pago. La dimensión cliente es la que
+unifica al cliente entre las seis líneas.
+
+Como ningún dataset público identifica a un mismo cliente en varias líneas de
+transporte, el proyecto combina transacciones públicas reales de seis fuentes
+(una por línea) con una capa de clientes sintéticos residentes en Chile,
+calibrada con el Censo de Población y Vivienda 2024 del INE. Los datos
+sintéticos se identifican como tales en el código, en la base de datos y en
+este informe.
+
+Este Informe de Avance 1 presenta el caso de negocio, las fuentes de
+información, la arquitectura propuesta, el modelo multidimensional y el script
+SQL que lo crea, sin datos. El script se ejecutó en PostgreSQL 17.11 y su
+resultado se verificó con consultas al catálogo y con 29 pruebas automáticas:
+el esquema \bd{dwh} contiene 7 tablas, 58 columnas, 7 llaves foráneas y 20
+reglas de validación, y todas las restricciones e índices cumplen la norma de
+nomenclatura. El poblamiento mediante ETL y las estadísticas de procesamiento
+corresponden al Avance N°2; el cubo, los KPI, el dashboard y las
+recomendaciones, al Avance N°3.
