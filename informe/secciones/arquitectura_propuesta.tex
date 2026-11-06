@@ -1,0 +1,239 @@
+% =============================================================================
+% Capítulo 3: Arquitectura Propuesta (nombre literal del enunciado)
+% Las versiones de la Tabla de herramientas se verificaron en el equipo de
+% desarrollo el 05-11-2026 (ver docs/bitacora.md).
+% =============================================================================
+\section{Arquitectura Propuesta}
+\label{sec:arquitectura}
+
+La solución sigue una arquitectura por capas, desde las fuentes de datos hasta
+el usuario final (Figura~\ref{fig:arquitectura}). Los datos se extraen de las
+fuentes públicas con Python, se integran con procesos ETL en Apache Hop y se
+almacenan en un Datawarehouse en PostgreSQL. Desde ahí, un cubo semántico en
+Cube define las dimensiones y métricas que consume el dashboard en Streamlit,
+dirigido a la gerencia comercial y de marketing. Todos los servicios corren en
+contenedores Docker, por lo que el entorno se reproduce igual en Linux y en
+Windows.
+
+\begin{figure}[H]
+  \centering
+  \caption{Arquitectura de la solución BI por capas}
+  \label{fig:arquitectura}
+  \contorno[6pt]{%
+  \begin{tikzpicture}[
+      font=\linespread{1}\scriptsize,
+      etiqueta/.style={fill=azulutem, text=white, font=\linespread{1}\scriptsize\bfseries,
+                       align=flush center, text width=2.3cm, minimum height=1.15cm,
+                       inner sep=2pt},
+      comp/.style={draw=azulutem, thick, rounded corners=2pt, fill=azulutem!6,
+                   align=flush center, inner sep=3pt, minimum height=0.95cm},
+      fuente/.style={comp, draw=gray!70, fill=gray!8, text width=1.55cm,
+                     inner sep=1.5pt, minimum height=1.05cm},
+      hecho/.style={comp, draw=verdeutem!75!black, fill=verdeutem!18},
+      flecha/.style={-{Stealth[length=2mm]}, thick, draw=gray!65!black},
+      nota/.style={font=\linespread{1}\tiny\itshape, text=gray!40!black}]
+
+    % Etiquetas de las capas
+    \node[etiqueta] at (1.25, 0)     {Fuentes\\de datos};
+    \node[etiqueta] at (1.25,-1.75)  {Extracción};
+    \node[etiqueta] at (1.25,-3.5)   {Integración\\(ETL)};
+    \node[etiqueta] at (1.25,-5.25)  {Almacena-\\miento};
+    \node[etiqueta] at (1.25,-7.0)   {Explotación};
+    \node[etiqueta] at (1.25,-8.75)  {Usuario};
+
+    % Capa 1: una fuente por línea de negocio y las fuentes de apoyo
+    \foreach \nombre/\texto [count=\i] in {
+        f1/\textbf{Buses}\\ANTT,
+        f2/\textbf{Trenes}\\UK Train Rides,
+        f3/\textbf{Taxis}\\NYC TLC,
+        f4/\textbf{Logística}\\Olist,
+        f5/\textbf{Aerolíneas}\\BTS DB1B,
+        f6/\textbf{Delivery}\\Delivery Center,
+        f7/{\textbf{Apoyo}\\Censo 2024, BCCh}} {
+      \node[fuente] (\nombre) at ({3.85+(\i-1)*1.84}, 0) {\texto};
+    }
+
+    % Capa 2: extracción
+    \node[comp, text width=12.4cm] (ext) at (9.35,-1.75)
+      {\textbf{Python} (pandas, SQLAlchemy, psycopg): descarga de las fuentes y
+       archivos originales en \texttt{data/raw/}};
+
+    % Capa 3: integración
+    \node[comp, text width=12.4cm] (hop) at (9.35,-3.5)
+      {\textbf{Apache Hop} (pipelines y workflows, ejecutados con
+       \texttt{hop-run}): limpieza y validación; normalización de zonas,
+       monedas (CLP), unidades y catálogos; asignación de clientes sintéticos;
+       carga de dimensiones y hechos; estadísticas de procesamiento};
+
+    % Capa 4: almacenamiento en PostgreSQL 17
+    \node[comp, text width=3.9cm] (stg) at (5.05,-5.25)
+      {\textbf{PostgreSQL 17}\\esquema \texttt{stg} (staging)};
+    \node[hecho, text width=3.9cm] (dwh) at (10.0,-5.25)
+      {\textbf{PostgreSQL 17}\\esquema \texttt{dwh} (modelo estrella)};
+    \node[hecho, dashed, text width=2.9cm] (pga) at (14.3,-5.25)
+      {\textbf{pgAdmin 4}\\administración};
+
+    % Capa 5: explotación
+    \node[comp, text width=4.4cm] (cube) at (9.6,-7.0)
+      {\textbf{Cube}\\cubo semántico:\\dimensiones, medidas y KPI};
+    \node[comp, text width=2.9cm] (st) at (14.3,-7.0)
+      {\textbf{Streamlit + Plotly}\\dashboard};
+
+    % Capa 6: usuario
+    \node[comp, draw=verdeutem!75!black, fill=white, text width=12.4cm] (us) at (9.35,-8.75)
+      {\textbf{Gerencia comercial y de marketing} (perfil táctico): segmentación
+       de clientes, campañas, descuentos y ofertas entre líneas};
+
+    % Flujos
+    \foreach \i in {1,...,7} {
+      \draw[flecha] (f\i.south) -- (f\i.south |- ext.north);
+    }
+    \draw[flecha] (ext.south) -- (ext.south |- hop.north);
+    \draw[{Stealth[length=2mm]}-{Stealth[length=2mm]}, thick, draw=gray!65!black]
+      (stg.north |- hop.south) -- node[nota, right] {carga y lectura} (stg.north);
+    \draw[flecha] (dwh.north |- hop.south) -- node[nota, right] {carga} (dwh.north);
+    \draw[thick, dashed, draw=gray!65!black] (dwh.east) -- (pga.west);
+    \draw[flecha] (dwh.south) -- node[nota, right] {consultas SQL} (dwh.south |- cube.north);
+    \draw[flecha] (cube.east) -- node[nota, above] {API} (st.west);
+    \draw[flecha] (st.south) -- (st.south |- us.north);
+
+    % Leyenda
+    \tikzset{muestra/.style={thick, rounded corners=1pt, minimum height=0.35cm,
+                             minimum width=0.6cm, inner sep=0pt}}
+    % Cada elemento parte donde termina el texto anterior, para que la leyenda
+    % no se monte sobre sí misma con ninguna tipografía
+    \node[muestra, draw=verdeutem!75!black, fill=verdeutem!18, anchor=west]
+      (l1) at (0.4,-10.0) {};
+    \node[anchor=west] (t1) at (l1.east) {Implementado en el Avance N°1};
+    \node[muestra, draw=azulutem, fill=azulutem!6, anchor=west]
+      (l2) at ([xshift=6mm]t1.east) {};
+    \node[anchor=west] (t2) at (l2.east) {Se implementa en los Avances N°2 y N°3};
+    \node[muestra, draw=gray!70, fill=gray!8, anchor=west]
+      (l3) at ([xshift=6mm]t2.east) {};
+    \node[anchor=west] at (l3.east) {Fuente externa};
+  \end{tikzpicture}}
+  \nota{Elaboración propia. BCCh: Banco Central de Chile (tipos de cambio).
+  Todos los servicios se ejecutan en contenedores Docker Compose.}
+\end{figure}
+
+\subsection{Componentes y Herramientas}
+
+La Tabla~\ref{tab:herramientas} detalla las herramientas de cada capa. Las
+versiones son las instaladas en el equipo de desarrollo y quedan fijadas en
+\bd{docker-compose.yml} (imágenes de los servicios) y en
+\bd{requirements.txt} (paquetes de Python).
+
+\begin{table}[H]
+  \centering
+  \caption{Herramientas de la arquitectura por capa}
+  \label{tab:herramientas}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.9cm}
+                                  >{\raggedright\arraybackslash}p{3.6cm}
+                                  >{\raggedright\arraybackslash}p{2.3cm}
+                                  >{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Capa} & \textbf{Herramienta} & \textbf{Versión} & \textbf{Función} \\
+    \midrule
+    Extracción & Python & 3.13.5 & Lenguaje de los scripts de extracción y de apoyo \\
+               & pandas & 3.1.0 & Lectura y preparación de archivos CSV, Excel y Parquet \\
+               & SQLAlchemy y psycopg & 2.1.6 y 3.3.8 & Conexión de Python con PostgreSQL \\
+    \midrule
+    Integración & Apache Hop~\cite{apache_hop} & 2.20.0 & Pipelines y workflows ETL, ejecutados por línea de comandos (\bd{hop-run}); requiere Java 17 o superior \\
+    \midrule
+    Almacenamiento & PostgreSQL~\cite{postgresql} & 17.11 & Motor del Datawarehouse (esquemas \bd{stg} y \bd{dwh}) \\
+                   & pgAdmin 4~\cite{pgadmin} & 9.18.0 & Administración web de la base, Query Tool y ERD Tool \\
+                   & Docker y Docker Compose~\cite{docker_compose} & 26.1.5 y 2.26.1 & Contenedores de los servicios \\
+    \midrule
+    Explotación & Cube (Cube Core)~\cite{cube} & 1.8.19 & Cubo semántico: dimensiones y métricas definidas en YAML \\
+                & Streamlit~\cite{streamlit} y Plotly & 1.66.1 y 7.1.0 & Dashboard de visualización web \\
+    \midrule
+    Calidad y documentación & pytest y ruff & 9.2.0 y 0.17.3 & Pruebas automáticas y revisión de estilo del código \\
+                & Playwright & 1.64.1 & Capturas automatizadas de pgAdmin para el informe \\
+                & Git y GitHub & --- & Control de versiones del proyecto \\
+                & LaTeX (LuaLaTeX) & TeX Live 2026 & Redacción de este informe \\
+    \bottomrule
+  \end{tabularx}
+  \nota{Versiones instaladas y verificadas en el equipo de desarrollo, salvo
+  Apache Hop y Cube, que se instalan en el Avance N°2 (ETL) y el Avance N°3
+  (cubo). Para ellas se fijaron las últimas versiones estables publicadas al
+  5 de noviembre de 2026: Apache Hop 2.20.0 (\bd{downloads.apache.org}) y la
+  imagen \bd{cubejs/cube:v1.8.19} (Docker Hub).}
+\end{table}
+
+\subsection{Capas de Almacenamiento}
+
+Los datos pasan por cuatro lugares de almacenamiento antes de llegar al
+usuario:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{\bd{data/raw/}:} archivos originales descargados de cada
+        fuente, sin modificar. Permiten repetir el ETL desde cero.
+  \item \textbf{\bd{data/processed/}:} archivos intermedios, como la muestra
+        de viajes de taxi o los clientes sintéticos generados.
+  \item \textbf{Esquema \bd{stg} (staging):} tablas con los datos de cada
+        fuente tal como llegan, donde el ETL los limpia y normaliza. Se agrega
+        en el Avance N°2.
+  \item \textbf{Esquema \bd{dwh}:} el modelo estrella definitivo
+        (Sección~\ref{sec:modelo}), que solo recibe datos validados. Está
+        implementado en este avance.
+\end{enumerate}
+
+Separar \bd{stg} de \bd{dwh} evita que un error de transformación deje datos
+inconsistentes en el modelo: si una carga falla, el esquema \bd{dwh} no
+cambia.
+
+\subsection{Flujo de Integración (ETL)}
+
+La Tabla~\ref{tab:flujo_etl} resume las etapas del proceso de integración que
+se construirá en el Avance N°2. El número de registros leídos, cargados y
+rechazados en cada etapa formará la sección Estadísticas de Procesamiento.
+
+\begin{table}[H]
+  \centering
+  \caption{Etapas del flujo de integración}
+  \label{tab:flujo_etl}
+  \small
+  \begin{tabularx}{\linewidth}{@{}c>{\raggedright\arraybackslash}p{3.2cm}
+                                  >{\raggedright\arraybackslash}p{2.4cm}
+                                  >{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{N°} & \textbf{Etapa} & \textbf{Herramienta} & \textbf{Descripción} \\
+    \midrule
+    1 & Extracción & Python & Descarga de las fuentes a \bd{data/raw/} y
+      muestreo de las fuentes de gran volumen \\
+    2 & Clientes sintéticos & Python & Generación de los clientes residentes
+      en Chile con las distribuciones del Censo 2024 \\
+    3 & Carga a staging & Apache Hop & Lectura de los archivos y carga en el
+      esquema \bd{stg} \\
+    4 & Transformación & Apache Hop & Limpieza, conversión de unidades y
+      moneda, traslado de fechas a 2023--2025, normalización de zonas,
+      canales y medios de pago, y asignación de cada transacción a un
+      cliente \\
+    5 & Carga de dimensiones & Apache Hop & Inserción de los registros nuevos
+      en las seis dimensiones, buscando por su llave natural
+      (\bd{codigo_<entidad>}) \\
+    6 & Carga de hechos & Apache Hop & Búsqueda de las llaves sustitutas de
+      cada dimensión e inserción en \bd{fact_venta} \\
+    7 & Validación & Apache Hop y SQL & Conteo de registros por etapa,
+      registros rechazados y comparación de totales con las fuentes \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Entorno de Ejecución}
+
+El archivo \bd{docker-compose.yml} define los servicios de la solución con
+imágenes de versión fija: PostgreSQL (\bd{postgres:17.11}) y pgAdmin
+(\bd{dpage/pgadmin4:9.18.0}); Cube (\bd{cubejs/cube:v1.8.19}) se agregará en
+el Avance N°3. Los puertos se
+publican solo en la interfaz local (\bd{127.0.0.1}), los datos de cada servicio
+se guardan en volúmenes de Docker, y las credenciales se leen desde un archivo
+\bd{.env} que no se versiona. Con estas decisiones, cualquier integrante
+levanta el mismo entorno con un solo comando, en Linux o en Windows (Anexo~B,
+Sección~\ref{sec:anexo_entorno}).
+
+El código del proyecto se versiona con Git en un repositorio público de
+GitHub (Anexo~C, Sección~\ref{sec:anexo_repositorio}). Los scripts de Python
+se revisan con ruff y el Datawarehouse se valida con pruebas automáticas en
+pytest (Sección~\ref{sec:verificacion}).

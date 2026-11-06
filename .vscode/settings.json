@@ -1,0 +1,23 @@
+{
+    // Receta de LaTeX Workshop para informe/informe.tex: latexmk con la
+    // configuración de informe/.latexmkrc (LuaLaTeX + BibTeX + las pasadas
+    // necesarias para resolver referencias y citas).
+    "latex-workshop.latex.recipes": [
+        {
+            "name": "Informe (latexmk, LuaLaTeX y BibTeX)",
+            "tools": ["latexmk_informe"]
+        }
+    ],
+    "latex-workshop.latex.tools": [
+        {
+            "name": "latexmk_informe",
+            "command": "latexmk",
+            "args": ["-synctex=1", "-interaction=nonstopmode", "-file-line-error", "%DOC%"],
+            "env": {}
+        }
+    ],
+    // Compilar solo al guardar: con "onFileChange" (el valor por omisión),
+    // cualquier cambio en disco lanza una compilación, y dos compilaciones a la
+    // vez sobre los mismos archivos auxiliares pueden dejar "??" en el PDF.
+    "latex-workshop.latex.autoBuild.run": "onSave"
+}

@@ -1,0 +1,149 @@
+% =============================================================================
+% Capítulo 7: Anexos
+% =============================================================================
+\section{Anexos}
+\label{sec:anexos}
+
+\subsection{Anexo A: Diccionario de Datos}
+\label{sec:anexo_diccionario}
+
+Este anexo describe cada columna del esquema \bd{dwh}: tipo de dato, si admite
+nulos, las llaves y reglas en que participa (PK: llave primaria; FK: llave
+foránea; UQ: valor único; CK: regla \bd{CHECK}) y su descripción. Las
+descripciones son los comentarios \bd{COMMENT ON} del propio script, y el
+anexo se genera desde el catálogo de PostgreSQL con
+\bd{herramientas/generar_diccionario.py}, por lo que coincide con la base
+creada.
+
+\input{secciones/anexo_diccionario}
+
+\subsection{Anexo B: Reproducción del Entorno}
+\label{sec:anexo_entorno}
+
+\subsubsection{Ejecución de los Scripts en Cualquier Equipo}
+
+Los scripts \bd{01_ddl.sql} y \bd{99_validacion.sql} son autónomos: no leen ni
+escriben archivos, no dependen de otros archivos y se ejecutan desde cualquier
+carpeta, en Windows, Linux o macOS. Solo requieren PostgreSQL 17 y una base de
+datos existente; se recomienda una base nueva, porque \bd{01_ddl.sql} borra y
+vuelve a crear el esquema \bd{dwh}.
+
+\begin{enumerate}[leftmargin=*]
+  \item Crear una base de datos UTF-8, por ejemplo \bd{rapiditos}.
+  \item En pgAdmin, abrir \bd{01_ddl.sql} en el Query Tool de esa base y
+        ejecutarlo completo con F5. Con \bd{psql}, desde la carpeta en que
+        estén los scripts:
+\begin{lstlisting}[style=consola]
+psql -U <usuario> -d rapiditos -v ON_ERROR_STOP=1 -f 01_ddl.sql
+psql -U <usuario> -d rapiditos -P pager=off -f 99_validacion.sql
+\end{lstlisting}
+  \item Comparar el resultado de \bd{99_validacion.sql} con la
+        Tabla~\ref{tab:verificacion}: la última consulta debe devolver cero
+        filas.
+\end{enumerate}
+
+Para Windows se entrega además la guía \bd{guia_ejecucion_windows.pdf}, que
+detalla paso a paso la instalación de PostgreSQL y pgAdmin, la ejecución con
+\bd{psql} y una alternativa con Docker Desktop que no requiere instalar
+PostgreSQL ni ningún otro archivo del proyecto.
+
+\subsubsection{Entorno de Desarrollo del Grupo}
+
+El grupo trabaja con el repositorio completo del proyecto, que define
+PostgreSQL y pgAdmin en \bd{docker-compose.yml} e incluye las pruebas
+automáticas. Estos pasos requieren ese repositorio y se ejecutan desde su
+raíz, igual en Linux y en Windows; solo cambian la copia del archivo
+\bd{.env} y la activación del entorno virtual de Python, indicadas en los
+comentarios.
+
+\begin{enumerate}[leftmargin=*]
+  \item Preparar las credenciales y levantar PostgreSQL y pgAdmin. En
+        \bd{.env} se definen las contraseñas de ambos servicios.
+\begin{lstlisting}[style=consola]
+cp .env.example .env      # Windows: copy .env.example .env
+docker compose up -d
+docker compose ps         # ambos servicios deben aparecer activos
+\end{lstlisting}
+  \item Crear el modelo multidimensional; pgAdmin queda en
+        \bd{http://localhost:5050}.
+\begin{lstlisting}[style=consola]
+docker compose exec postgres psql -U rapiditos -d rapiditos \
+    -v ON_ERROR_STOP=1 -f /sql/01_ddl.sql
+\end{lstlisting}
+  \item Crear el entorno de Python y ejecutar las pruebas automáticas, que
+        usan una base de prueba aparte y nunca modifican \bd{rapiditos}.
+\begin{lstlisting}[style=consola]
+python -m venv .venv
+source .venv/bin/activate # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+pytest -v
+\end{lstlisting}
+  \item Opcionalmente, regenerar el diccionario de datos del Anexo~A y las
+        capturas del informe.
+\begin{lstlisting}[style=consola]
+python herramientas/generar_diccionario.py
+python -m playwright install chromium   # una sola vez
+python herramientas/capturar_pgadmin.py
+\end{lstlisting}
+\end{enumerate}
+
+\subsection{Anexo C: Repositorio del Proyecto}
+\label{sec:anexo_repositorio}
+
+El código fuente completo del proyecto está publicado en un repositorio
+público de GitHub:
+
+\begin{center}
+  \url{https://github.com/hirojika/datawarehouse-transportes-rapiditos}
+\end{center}
+
+El repositorio reúne los scripts del Datawarehouse, las pruebas automáticas,
+las herramientas de apoyo, la documentación del diseño y las fuentes de este
+informe, de modo que cualquier persona puede revisar o reproducir el trabajo.
+Cada entrega se registra en Git con un commit descriptivo, y el archivo
+\bd{docs/bitacora.md} documenta, con fecha, cada decisión, cambio y
+verificación realizada durante el proyecto. La Tabla~\ref{tab:repositorio}
+describe su contenido.
+
+\begin{table}[H]
+  \centering
+  \caption{Contenido del repositorio del proyecto}
+  \label{tab:repositorio}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.4cm}
+                                  >{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Carpeta o archivo} & \textbf{Contenido} \\
+    \midrule
+    \bd{sql/} & Scripts del Datawarehouse: \bd{01_ddl.sql} (creación del
+      modelo estrella) y \bd{99_validacion.sql} (verificación) \\
+    \bd{docs/} & Diseño del modelo dimensional (\bd{modelo_dimensional.md},
+      fuente de verdad del diseño), fuentes de información, bitácora,
+      diagrama del esquema estrella y capturas del proceso \\
+    \bd{informe/} & Fuentes LaTeX de este informe y de la guía de ejecución en
+      Windows, con las referencias en \bd{referencias.bib} \\
+    \bd{tests/} & Pruebas automáticas del script del Datawarehouse (pytest) \\
+    \bd{herramientas/} & Captura automatizada de pgAdmin, generación del
+      diccionario de datos (Anexo~A) y armado del paquete de entrega \\
+    \bd{docker-compose.yml}, \bd{docker/} & Definición de los servicios
+      PostgreSQL 17 y pgAdmin 4, con versiones fijas \\
+    \bd{requirements.txt}, \bd{.env.example} & Dependencias de Python con
+      versiones fijas y plantilla de configuración de la conexión \\
+    \bd{etl/}, \bd{dashboard/}, \bd{data/} & Carpetas reservadas para el
+      proyecto de Apache Hop, el dashboard en Streamlit y los datos de origen,
+      que se desarrollan en los Avances N°2 y N°3 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Por seguridad y derechos de autor, el repositorio no incluye las credenciales
+de conexión (archivo \bd{.env}, que cada integrante crea a partir de
+\bd{.env.example}) ni el material del curso entregado por el profesor. Para
+obtener una copia local se usa:
+
+\begin{lstlisting}[style=consola]
+git clone https://github.com/hirojika/datawarehouse-transportes-rapiditos.git
+\end{lstlisting}
+
+Los pasos para levantar el entorno a partir de esa copia están en el
+Anexo~B (Sección~\ref{sec:anexo_entorno}).
