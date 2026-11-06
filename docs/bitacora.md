@@ -514,3 +514,8 @@ Cambios:
 Verificación:
 - **Compilación:** el informe (53 páginas) compila con LuaLaTeX y pdfLaTeX con 0 avisos y ningún "??".
 - **Historial limpio:** ningún objeto del historial contiene los PDF del curso (`git rev-list --all --objects`).
+- **Publicación:** el repositorio se creó con `gh repo create --public` y se le agregaron temas (`business-intelligence`, `data-warehouse`, `star-schema`, `postgresql`, `etl`, `apache-hop`, `streamlit`). Revisión sin sesión iniciada:
+  - la página responde 200;
+  - la API lista los 3 commits y 62 archivos;
+  - no aparecen `.env`, los PDF del curso ni los archivos de trabajo personal.
+- **Paquete regenerado:** el `LEEME.txt` del zip trae el enlace, y el informe del zip lo cita dos veces (sección 3.4 y Anexo C).
