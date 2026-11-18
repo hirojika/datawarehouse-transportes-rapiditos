@@ -61,6 +61,11 @@ def main() -> int:
     # basta para un equipo de desarrollo local
     propiedades = " ".join(f"-D{v}={env[v]}" for v in VARIABLES)
     entorno = dict(os.environ, HOP_OPTIONS=f"-Xmx2048m {propiedades}")
+    if sys.platform.startswith("linux") and os.environ.get("WAYLAND_DISPLAY"):
+        # hop-gui.sh fuerza GTK sobre X11 si XDG_SESSION_TYPE=wayland, y en Debian 13 SWT se cae
+        # en XWayland (SIGSEGV en gdk_window_get_screen); con GTK nativo de Wayland funciona.
+        # shortcut: se engaña al chequeo del lanzador; revisar al actualizar Hop.
+        entorno |= {"GDK_BACKEND": "wayland", "XDG_SESSION_TYPE": "x11"}
     subprocess.Popen(script(hop, "hop-gui"), env=entorno, cwd=hop)
     print("Hop GUI se está abriendo. Elegir el proyecto 'rapiditos' en la barra superior.")
     return 0

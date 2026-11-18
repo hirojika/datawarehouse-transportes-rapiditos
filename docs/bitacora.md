@@ -692,3 +692,15 @@ Verificación:
 - **Regenerados:** las tablas de Estadísticas de Procesamiento, las capturas 06a a 06f, `05_datos_dwh.sql` (15,4 MB), el informe (72 páginas, sin avisos nuevos), la guía y el paquete (11,3 MB, 36 archivos).
 - **Paquete de punta a punta:** en una base nueva, `05_datos_dwh.sql` y el ETL de Hop del paquete (con el Python del sistema) dejaron el mismo resultado: 118.263 ventas por 6.527.727.598,37 CLP.
 - **Pendiente del grupo:** las capturas de Hop GUI 07a a 07e (instrucciones en `docs/checklist_capturas.md`). Después hay que recompilar el informe y volver a empaquetar.
+
+### 17-11-2026: Hop GUI en Wayland
+
+**Problema:** `python etl/abrir_hop_gui.py` abría Hop GUI, pero se caía a los segundos con SIGSEGV en `gdk_window_get_screen` (libgdk-3). La sesión del equipo es Wayland, y `hop-gui.sh` fuerza GTK sobre X11 (`GDK_BACKEND=x11`) cuando `XDG_SESSION_TYPE=wayland`, como solución para el issue 4252 de Hop.
+
+**Prueba:**
+- Con X11 (XWayland), la interfaz se cae a los 12 s.
+- Con GTK nativo de Wayland (`GDK_BACKEND=wayland`), sigue abierta.
+
+**Cambio:** en Linux con `WAYLAND_DISPLAY`, `abrir_hop_gui.py` lanza Hop con `GDK_BACKEND=wayland` y `XDG_SESSION_TYPE=x11`. La segunda variable solo sirve para que el lanzador no vuelva a forzar X11. Queda marcado en el código para revisarlo al actualizar Hop.
+
+Verificación: Hop GUI sigue abierto pasados los 30 s y carga los proyectos. Los `Gtk-WARNING` de tamaños negativos que muestra la consola son cosméticos.
