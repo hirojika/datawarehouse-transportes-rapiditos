@@ -1,6 +1,7 @@
 % =============================================================================
 % Capítulo 2: Fuentes de Información (nombre literal del enunciado)
-% Fuente: docs/fuentes_de_informacion.md (aprobada por el grupo el 05-11-2026).
+% Fuente: docs/fuentes_de_informacion.md (aprobada el 05-11-2026; revisada para
+% el Avance N°2 el 17-11-2026) y data/LEEME.md.
 % =============================================================================
 \section{Fuentes de Información}
 \label{sec:fuentes}
@@ -20,19 +21,28 @@ datos:
 \begin{itemize}[leftmargin=*]
   \item \textbf{Transacciones públicas:} los viajes, pasajes, envíos y
         pedidos provienen de las fuentes de la Tabla~\ref{tab:fuentes}.
-  \item \textbf{Clientes sintéticos:} las identidades de los clientes (RUT
-        ficticio, género, fecha de nacimiento, tipo de cliente y comuna de
+  \item \textbf{Clientes sintéticos:} las identidades de los clientes (código,
+        nombre, género, fecha de nacimiento, tipo de cliente y comuna de
         residencia) se generan de forma sintética. Los clientes residen en
-        Chile, y su distribución por comuna, sexo y edad se calibra con el
-        Censo de Población y Vivienda 2024 del INE~\cite{ine_censo2024}. Cada
+        Chile, y su distribución por comuna, sexo y edad sigue el Censo de
+        Población y Vivienda 2024 del INE~\cite{ine_censo2024}. Cada
         transacción pública se asigna a uno de estos clientes, de modo que un
         mismo cliente puede comprar en varias líneas.
 \end{itemize}
 
 Todo dato sintético se identifica como tal en el código del ETL, en la base de
-datos y en este informe.
+datos y en este informe: los nombres de los clientes son «Cliente Sintético» o
+«Empresa Sintética» seguidos de un número, y las tablas de staging marcan cada
+transacción cuya fecha o cuyo monto fue generado.
 
 \subsection{Fuentes por Línea de Negocio}
+
+En el Avance N°2 se revisaron de nuevo todas las fuentes, ya con los archivos
+descargados. La única que cambió es la de buses: el portal de datos abiertos de
+la ANTT de Brasil, propuesto en el Avance N°1, rechazó las descargas («Request
+Rejected»), tanto las automatizadas como las hechas desde el navegador. Se
+reemplazó por los datos de pasajeros de la Superintendencia de Transporte de
+Colombia.
 
 \begin{table}[H]
   \centering
@@ -41,38 +51,43 @@ datos y en este informe.
   \small
   \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.4cm}
                                   >{\raggedright\arraybackslash}X
-                                  >{\raggedright\arraybackslash}p{3.2cm}
+                                  >{\raggedright\arraybackslash}p{3.4cm}
                                   >{\raggedright\arraybackslash}p{1.9cm}
-                                  >{\raggedright\arraybackslash}p{2.1cm}@{}}
+                                  >{\raggedright\arraybackslash}p{2.0cm}@{}}
     \toprule
     \textbf{Línea} & \textbf{Fuente (publicador, país)} & \textbf{Detalle}
       & \textbf{Período} & \textbf{Licencia} \\
     \midrule
-    Buses InterUrbanos & Monitriip «Bilhetes de Passagem», Agência Nacional de
-      Transportes Terrestres (ANTT), Brasil~\cite{antt_monitriip}
-      & Pasajes de buses interestatales por mes, origen, destino y tipo de
-        servicio & 2019--2025, mensual & Creative Commons Atribución \\
+    Buses InterUrbanos & Operación de pasajeros y despacho de vehículos por
+      carretera, Superintendencia de Transporte, Colombia~\cite{supertransporte}
+      & Pasajeros y despachos por terminal, municipio de origen y destino,
+      fecha, hora y nivel de servicio. No trae precio
+      & 2021--2026, diario & CC BY-SA 4.0 \\
     Trenes & «UK Train Rides», Maven Analytics, Reino Unido~\cite{maven_uktrain}
-      & Un registro por pasaje; datos ficticios según el proveedor
+      & 31.653 pasajes; datos ficticios según el proveedor
       & Ene.--abr. 2024 & Dominio público \\
-    Radio Taxis & TLC Trip Record Data, NYC Taxi \& Limousine Commission,
-      EE.UU.~\cite{nyc_tlc} & Un registro por viaje & 2009--2026, mensual
-      & Términos de uso de NYC.gov \\
+    Radio Taxis & TLC Trip Record Data (taxis verdes), NYC Taxi \& Limousine
+      Commission, EE.UU.~\cite{nyc_tlc} & Un registro por viaje
+      & 2023--2025, mensual & Términos de uso de NYC.gov \\
     Logística y Distribución & «Brazilian E-Commerce Public Dataset», Olist,
-      Brasil~\cite{olist} & Un registro por pedido e ítem & 2016--2018
-      & CC BY-NC-SA 4.0 \\
-    Aerolíneas & Airline Origin and Destination Survey (DB1B), Bureau of
-      Transportation Statistics, EE.UU.~\cite{bts_db1b}
-      & Muestra de pasajes aéreos & Trimestral, incluye 2023--2025
-      & Datos públicos del gobierno de EE.UU. \\
-    URapid Delivery & «Delivery Center: Food \& Goods orders», Delivery
-      Center, Brasil~\cite{gironews_delivery,delivery_center}
-      & Un registro por pedido & Ene.--abr. 2021 & No publicada \\
+      Brasil~\cite{olist} & 99.441 pedidos, con ítems, flete y peso
+      & 2016--2018 & CC BY-NC-SA 4.0 \\
+    Aerolíneas & Airline Origin and Destination Survey (DB1B Market), Bureau
+      of Transportation Statistics, EE.UU.~\cite{bts_db1b}
+      & Muestra del 10 \% de los pasajes aéreos de EE.UU.
+      & 2023 T1 a 2025 T2 & Datos públicos del gobierno de EE.UU. \\
+    URapid Delivery & «Delivery Center: Food \& Goods orders in Brazil»,
+      Delivery Center, Brasil~\cite{delivery_center,gironews_delivery}
+      & 368.999 pedidos, con canal, pago y tipo de repartidor
+      & Ene.--abr. 2021 & Sin licencia abierta \\
     \bottomrule
   \end{tabularx}
-  \nota{Elaboración propia a partir de las páginas de cada fuente, consultadas
-  en noviembre de 2026. Para logística se mantiene como alternativa el dataset
-  DataCo Smart Supply Chain, con licencia CC BY 4.0~\cite{dataco}.}
+  \nota{Elaboración propia a partir de las páginas y archivos de cada fuente,
+  revisados el 17 de noviembre de 2026. Los archivos de las fuentes no se
+  publican en el repositorio del proyecto: pesan cientos de megabytes y la
+  licencia de Delivery Center no permite redistribuirlos. El repositorio
+  incluye en su lugar \bd{data/LEEME.md}, con el enlace, la licencia y el uso
+  de cada dataset.}
 \end{table}
 
 La compañía del caso es internacional. Por eso, que las fuentes provengan de
@@ -95,25 +110,33 @@ parte del modelo estrella llegan.
     \toprule
     \textbf{Línea} & \textbf{Datos que aporta} & \textbf{Destino en el modelo} \\
     \midrule
-    Buses InterUrbanos & Origen y destino, tipo de servicio, cantidad de
-      pasajes, valor medio, gratuidades
-      & \bd{dim_zona} (origen y destino), \bd{dim_servicio},
-        \bd{cantidad}, montos \\
-    Trenes & Estaciones, fecha y hora, precio, tipo de compra (en línea o en
-      estación), medio de pago, clase
-      & \bd{dim_zona}, \bd{dim_tiempo}, montos, \bd{dim_canal_venta},
-        \bd{dim_medio_pago}, \bd{dim_servicio} \\
+    Buses InterUrbanos & Municipios de origen y destino, nivel de servicio
+      (básico o lujo), pasajeros por despacho
+      & \bd{dim_zona} (origen y destino), \bd{dim_servicio}, una venta por
+        pasajero; distancia y tarifa estimadas \\
+    Trenes & Estaciones, fecha del viaje, precio, tipo de compra (en línea o en
+      estación), medio de pago, clase, tarjeta de descuento y tipo de pasaje
+      & \bd{dim_zona}, \bd{dim_tiempo}, \bd{dim_canal_venta},
+        \bd{dim_medio_pago}, \bd{dim_servicio}, montos y descuento,
+        \bd{duracion_minutos} \\
     Radio Taxis & Zonas de origen y destino, horas de inicio y fin, distancia,
-      tarifas, tipo de pago
-      & \bd{dim_zona}, \bd{dim_tiempo}, \bd{duracion_minutos},
-        \bd{distancia_km}, montos, \bd{dim_medio_pago} \\
-    Logística y Distribución & Ciudad del vendedor y del cliente, precio,
-      costo de envío, peso del producto, tipo de pago
-      & \bd{dim_zona}, montos, \bd{peso_kg}, \bd{dim_medio_pago} \\
+      tarifa, tipo de pago, tipo de viaje (en la calle o despachado),
+      pasajeros
+      & \bd{dim_zona}, \bd{dim_tiempo}, \bd{dim_canal_venta},
+        \bd{dim_medio_pago}, \bd{distancia_km}, \bd{duracion_minutos},
+        montos, \bd{cantidad} \\
+    Logística y Distribución & Ciudad del vendedor y del comprador, flete,
+      peso de los productos, ítems, tipo de pago, fechas de compra y entrega
+      & \bd{dim_zona}, montos, \bd{peso_kg}, \bd{cantidad},
+        \bd{dim_medio_pago}, \bd{distancia_km}, \bd{duracion_minutos} \\
     Aerolíneas & Aeropuertos de origen y destino, tarifa, pasajeros,
-      trimestre & \bd{dim_zona}, montos, \bd{cantidad}, \bd{dim_tiempo} \\
-    URapid Delivery & Canal, medio de pago, monto del pedido, tarifa de envío
-      & \bd{dim_canal_venta}, \bd{dim_medio_pago}, montos \\
+      distancia, trimestre
+      & \bd{dim_zona}, \bd{dim_servicio} (alcance del vuelo), montos,
+        \bd{cantidad}, \bd{distancia_km}, \bd{dim_tiempo} \\
+    URapid Delivery & Canal, medio de pago, vouchers, monto del pedido, tarifa
+      de envío, tipo de repartidor y de tienda, distancia y tiempo de entrega
+      & \bd{dim_canal_venta}, \bd{dim_medio_pago}, \bd{dim_servicio}, montos y
+        descuento, \bd{distancia_km}, \bd{duracion_minutos} \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -129,22 +152,30 @@ fuente externa: se genera con un script SQL.
   \caption{Fuentes de apoyo y su uso en el proyecto}
   \label{tab:fuentes_apoyo}
   \small
-  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.2cm}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.0cm}
                                   >{\raggedright\arraybackslash}X
                                   >{\raggedright\arraybackslash}p{2.4cm}@{}}
     \toprule
     \textbf{Fuente} & \textbf{Uso} & \textbf{Se carga al DWH} \\
     \midrule
-    Censo de Población y Vivienda 2024, INE~\cite{ine_censo2024}
-      & Calibrar los clientes sintéticos y poblar sus comunas y regiones de
-        residencia & Sí, en \bd{dim_cliente} \\
-    Tablas de zonas de cada fuente
-      & Zonas de taxi de Nueva York, puntos de origen y destino de ANTT,
-        estaciones del Reino Unido y aeropuertos de EE.UU.
+    Censo de Población y Vivienda 2024, INE, tabla D1: población por comuna,
+      sexo y grupo quinquenal de edad~\cite{ine_censo2024}
+      & Distribución de comuna, sexo y edad de los clientes sintéticos
+      & Sí, en \bd{dim_cliente} \\
+    Tablas de zonas de cada fuente y DIVIPOLA del DANE~\cite{dane_divipola}
+      & Zonas de taxi de Nueva York, aeropuertos de EE.UU., estaciones del
+        Reino Unido, ciudades de Brasil y municipios de Colombia (con sus
+        coordenadas)
       & Sí, en \bd{dim_zona} \\
-    Tipos de cambio del Banco Central de Chile~\cite{bcentral}
-      & Expresar en pesos chilenos (CLP) los montos en dólares, libras y
-        reales & Sí, en los montos \\
+    Dólar observado y paridades del Banco Central de Chile, promedios anuales
+      2023--2025~\cite{bcentral}
+      & Expresar en pesos chilenos (CLP) los montos en dólares, libras y reales
+      & Sí, en los montos \\
+    Estudio de costos de viajes nacionales del SERNAC (junio de
+      2024)~\cite{sernac2024} y coordenadas de GeoNames~\cite{geonames}
+      & Estimar la tarifa y la distancia por carretera de los viajes en bus
+        (Sección~\ref{sec:tratamientos})
+      & Sí, en los montos y la distancia de buses \\
     Encuesta de transporte interurbano de pasajeros, INE~\cite{ine_etranp};
     memoria anual de EFE~\cite{efe_memoria}; estadísticas de la
     JAC~\cite{jac}
@@ -153,36 +184,85 @@ fuente externa: se genera con un script SQL.
   \end{tabularx}
 \end{table}
 
-\subsection{Tratamientos Previos a la Carga}
+\begin{table}[H]
+  \centering
+  \caption{Tipo de cambio usado para expresar los montos en pesos chilenos}
+  \label{tab:tipo_cambio}
+  \small
+  \begin{tabular}{@{}lrrr@{}}
+    \toprule
+    \textbf{Moneda (CLP por unidad)} & \textbf{2023} & \textbf{2024} & \textbf{2025} \\
+    \midrule
+    Dólar estadounidense (USD) & 839,07 & 943,58 & 951,64 \\
+    Libra esterlina (GBP) & 1.042,84 & 1.205,24 & 1.252,82 \\
+    Real brasileño (BRL) & 167,93 & 175,42 & 170,17 \\
+    \bottomrule
+  \end{tabular}
+  \nota{Dólar observado, promedio anual (cuadro TCB\_505). La libra y el real
+  se calculan con el dólar observado y las paridades por dólar del cuadro
+  TCB\_510~\cite{bcentral}.}
+\end{table}
 
-Antes de cargar los datos en el Datawarehouse, el ETL aplica los tratamientos
-siguientes. Las limitaciones que estos tratamientos implican se detallan en la
+\subsection{Tratamientos Previos a la Carga}
+\label{sec:tratamientos}
+
+Antes de cargar los datos en el Datawarehouse, la preparación en Python aplica
+los tratamientos siguientes. Las limitaciones que implican se detallan en la
 Sección~\ref{sec:limitaciones}.
 
 \begin{enumerate}[leftmargin=*]
-  \item \textbf{Clientes sintéticos:} generación de los clientes residentes en
-        Chile y asignación de cada transacción a un cliente.
-  \item \textbf{Desagregación:} las fuentes que publican totales (ANTT por mes
-        y ruta, DB1B por trimestre) se convierten en transacciones
-        individuales sintéticas que reproducen esos totales.
+  \item \textbf{Muestreo:} de cada fuente se toma una muestra, con un total de
+        120.000 transacciones: 25.000 de buses, 15.000 de trenes, 25.000 de
+        taxis, 20.000 de logística, 15.000 de aerolínea y 20.000 de delivery.
+        La muestra de buses se pondera por la cantidad de pasajeros de cada
+        despacho, y cada pasajero es una venta. La semilla es fija, así que la
+        muestra se puede reproducir.
+  \item \textbf{Clientes sintéticos:} se generan 9.500 personas mayores de
+        edad, cuyas comunas, sexo y edad siguen la distribución del Censo 2024,
+        y 500 empresas. Cada transacción se asigna a un cliente según un peso
+        que combina su segmento, su afinidad con cada línea y su nivel de
+        actividad. Los segmentos (por ejemplo, «joven digital» o «viajero
+        frecuente») y sus afinidades son \textbf{supuestos del generador}: los
+        tipos de clientes que muestre el análisis reflejan esos supuestos, no
+        hallazgos sobre clientes reales.
   \item \textbf{Período de análisis:} el objetivo pide los últimos tres años,
-        por lo que se trabaja con 2023 a 2025. Las fuentes de otros años
-        (Olist, Delivery Center) o que cubren solo una parte del período
-        (UK Train Rides) trasladan sus fechas a ese rango, conservando su
-        estacionalidad.
-  \item \textbf{Unidades y moneda:} millas a kilómetros, gramos a kilogramos y
-        montos a CLP.
-  \item \textbf{Muestreo:} de las fuentes con millones de registros, como los
-        viajes de taxi de Nueva York, se carga una muestra.
+        por lo que se trabaja con 2023 a 2025. Taxis y buses ya son de ese
+        período. Olist conserva el mes y el día y cambia el año. UK Train Rides
+        y Delivery Center, que cubren solo cuatro meses, se distribuyen en
+        nueve ventanas de cuatro meses. El segundo semestre de 2025 de la
+        aerolínea, que BTS todavía no publica, se completa con 2024 trasladado
+        un año.
+  \item \textbf{Buses en 2024:} la fuente casi no tiene datos de 2024 (106 mil
+        filas, frente a 12,3 millones en 2023 y 11,7 millones en 2025). Cada
+        mes de 2024 con menos de la mitad de los pasajeros del mismo mes de
+        2023 se reemplaza por ese mes de 2023, trasladado un año.
+  \item \textbf{Tarifa y distancia de buses:} la fuente no trae precio. Con las
+        28 rutas chilenas del SERNAC que informan precio y kilómetros por
+        carretera~\cite{sernac2024} se ajustó, por mínimos cuadrados, una
+        tarifa por pasaje de 6.918 + 18,8~CLP por km en servicio básico (semi
+        cama) y de 6.917 + 26,6~CLP por km en lujo (salón cama). La distancia
+        por carretera entre municipios colombianos se estima con la distancia
+        en línea recta entre sus coordenadas multiplicada por 1,21, la mediana
+        de la razón entre la distancia por carretera y en línea recta de esas
+        28 rutas.
+  \item \textbf{Montos:} en trenes, el monto bruto y el descuento se
+        reconstruyen con las reglas del propio dataset (tarjeta de descuento,
+        1/3; pasaje anticipado, 1/2; fuera de punta, 1/4). En delivery, el
+        descuento son los vouchers del pedido. En logística, la venta es el
+        flete. Todos los montos se convierten a CLP con el tipo de cambio del
+        año de la transacción (Tabla~\ref{tab:tipo_cambio}).
+  \item \textbf{Unidades:} millas y metros a kilómetros, y gramos a
+        kilogramos (esta conversión la hace el ETL de Apache Hop).
 \end{enumerate}
 
 \subsection{Estado de Verificación de las Fuentes}
 
-Las fuentes se revisaron en noviembre de 2026. Los datos de UK Train Rides,
-NYC TLC y DataCo se verificaron en sus páginas oficiales. De ANTT, Olist y BTS
-solo se vieron extractos en resultados de búsqueda (el portal de ANTT bloquea
-el acceso automatizado y la página de BTS respondió con error), y la página
-original de Delivery Center no se encontró: se revisó una copia publicada en
-GitHub. Antes de la carga del Avance N°2 se
-confirmarán en el navegador las columnas, la granularidad y la licencia de
-estas fuentes, además de la serie de tipos de cambio que se usará.
+Todas las fuentes se verificaron el 17 de noviembre de 2026 con los archivos
+descargados: columnas, cantidad de registros, período y licencia. Las fuentes
+sin descarga automatizada (UK Train Rides, Olist y Delivery Center, que piden
+iniciar sesión) las descargó el grupo desde sus páginas oficiales; el resto lo
+descarga el script \bd{etl/python/descargar_fuentes.py}, que registra el tamaño
+y la huella SHA-256 de cada archivo. La página original de Delivery Center se
+encontró en Kaggle: su licencia («Data files © Original Authors») no es
+abierta, por lo que el dataset se usa solo con fines académicos y sus archivos
+no se redistribuyen.

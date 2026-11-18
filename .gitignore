@@ -22,3 +22,8 @@ entrega/
 
 # Material del curso (enunciado y diapositivas del profesor): no se publica
 referencias/*.pdf
+
+# Datos de las fuentes y archivos intermedios: pesan mucho y algunas licencias no permiten redistribuirlos.
+# Se regeneran con etl/python/descargar_fuentes.py (y las descargas manuales de docs/fuentes_de_informacion.md)
+data/raw/
+data/processed/

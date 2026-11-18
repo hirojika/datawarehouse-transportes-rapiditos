@@ -519,3 +519,176 @@ Verificación:
   - la API lista los 3 commits y 62 archivos;
   - no aparecen `.env`, los PDF del curso ni los archivos de trabajo personal.
 - **Paquete regenerado:** el `LEEME.txt` del zip trae el enlace, y el informe del zip lo cita dos veces (sección 3.4 y Anexo C).
+
+## 17-11-2026: inicio del Avance N°2, decisiones y nueva revisión de las fuentes
+
+Decisiones del grupo:
+- **ETL en Apache Hop 2.20.0.**
+  - Python hace la extracción y la síntesis: clientes sintéticos, desagregación de totales y asignación de cada transacción a un cliente.
+  - Hop carga el staging con 6 pipelines, uno por línea, que dejan los datos en una tabla común `stg.transaccion`. Después carga las dimensiones, los hechos (1 pipeline) y ejecuta la validación.
+  - Un workflow principal orquesta todo y cada ejecución hace una carga completa.
+- **Asignación de transacciones a clientes:** con perfiles de comportamiento declarados como supuestos del generador. El informe aclarará que los segmentos que aparezcan reflejan esos supuestos y no son hallazgos sobre clientes reales.
+- **Volumen:** unos 10.000 clientes y 120.000 ventas en 2023-2025.
+- **Tipo de cambio:** promedios anuales 2023-2025 del Banco Central de Chile (dólar observado y paridades). Es una fuente nueva, aprobada.
+- **Fuentes:** primero se obtienen todas. Las que piden sesión las descarga el grupo. Solo si una no se puede obtener se evalúa generar esa línea de forma sintética.
+- **Informe:** el "Informe de seguimiento" es el mismo informe, actualizado con lo que pide el Avance N°2.
+- **Entrega adicional:** un script SQL con el DWH poblado, para ejecutarlo sin instalar Hop.
+
+Revisión de las fuentes (17-11-2026):
+
+| Fuente | Resultado |
+|---|---|
+| NYC TLC (taxis) | **Verificado.** Archivos Parquet mensuales de enero de 2023 a diciembre de 2025, descargables sin sesión. Se usan los **taxis verdes** (1,2 a 1,4 MB al mes) en vez de los amarillos (48 a 74 MB al mes): la fuente aprobada incluye ambos, y con los verdes el ETL descarga unos 50 MB en vez de unos 2 GB |
+| BTS DB1B Market (aerolínea) | **Verificado.** Archivos trimestrales comprimidos (88 a 110 MB) descargables sin sesión. Disponibles de 2023 T1 a 2025 T2: 2025 T3 y T4 responden 404. El segundo semestre de 2025 se completará trasladando fechas, y ese traslado se marca como sintético |
+| INE Censo 2024 | **Verificado.** La tabla D1 (Excel) trae la población por comuna, grupo quinquenal de edad y sexo (hoja 4, 6.601 filas). Licencia CC BY-SA 4.0, con atribución al INE |
+| Banco Central de Chile | **Verificado.** Promedios anuales del dólar observado (cuadro TCB_505) y paridades (TCB_510), públicos sin registro. Dólar: 839,07, 943,58 y 951,64 CLP por USD en 2023, 2024 y 2025 |
+| ANTT Monitriip (buses) | **Requiere descarga manual.** El portal rechaza el acceso automatizado con un firewall ("Request Rejected"). Según los buscadores, hay un CSV mensual (`venda_passagem_MM_AAAA.csv`, unos 16 MB) y un diccionario de datos en PDF |
+| UK Train Rides (trenes) | **Requiere descarga manual.** Maven Analytics pide registrarse. Licencia de dominio público confirmada. La página sigue indicando 499 registros y 25 campos |
+| Olist (logística) | **Requiere descarga manual** (Kaggle pide sesión). Licencia **CC BY-NC-SA 4.0** confirmada: uso académico no comercial y con atribución |
+| Delivery Center (delivery) | **Requiere descarga manual** (Kaggle pide sesión). Página original encontrada: `kaggle.com/datasets/nosbielcs/brazilian-delivery-center`. Licencia "Data files © Original Authors", es decir, **sin licencia abierta**. Según una reseña, los datos son de enero a abril de 2021 y fueron alterados para cumplir la ley de protección de datos de Brasil |
+
+Cambios:
+- **Apache Hop 2.20.0:** se descargó desde `downloads.apache.org` y se instaló en la carpeta personal (`~/hop`), fuera del repositorio. La suma SHA-512 coincide con la publicada. Incluye el driver JDBC de PostgreSQL (`postgresql-42.7.14.jar`) y `hop-run` responde.
+- **`.gitignore`:** se agregaron `data/raw/` y `data/processed/`. Los archivos de las fuentes pesan cientos de MB, y las licencias de Olist y Delivery Center no permiten publicarlos en el repositorio.
+- **`etl/python/descargar_fuentes.py`, nuevo:**
+  - Descarga a `data/raw/<fuente>/` las fuentes que no piden sesión: taxis, aerolínea, Censo y tipo de cambio.
+  - Registra la URL, el tamaño, el SHA-256 y la fecha de cada archivo en `data/raw/manifiesto.csv`.
+  - No repite las descargas que ya existen y no deja archivos a medias si una descarga se corta.
+
+### 17-11-2026: descargas manuales y fuente de buses
+
+- **Descargas del grupo**, revisadas sin descomprimir:
+  - UK Train Rides: `railway.csv`, con 31.653 pasajes y 18 columnas, más su diccionario. Se aclara la diferencia con la página, que decía 499 registros.
+  - Olist: 9 CSV, con 99.441 pedidos y 112.650 ítems.
+  - Delivery Center: 7 CSV, con 368.999 pedidos y 378.843 entregas.
+  - El zip de trenes llegó a `data/raw/buses/` y se movió a `data/raw/tren/`.
+- **Delivery Center (decisión del grupo):** se usa, pero sus archivos no se publican. El repositorio incluye en su lugar `data/LEEME.md`, que lista cada dataset, dónde obtenerlo, su licencia y cómo lo usa el ETL.
+- **ANTT:** el portal también rechaza las descargas desde el navegador del grupo ("Request Rejected"). No se encontró ninguna copia en Kaggle, GitHub ni Base dos Dados. Alternativas revisadas:
+  - **Supertransporte (Colombia), dataset `eh75-8ah6` en datos.gov.co.**
+    - Despachos y pasajeros por terminal, municipio de origen y de destino, fecha, hora y nivel de servicio. Licencia CC BY-SA 4.0, con API pública.
+    - 2023 trae 12,3 millones de filas y 2025 trae 11,7 millones, pero 2024 solo trae 106 mil.
+    - Hay algunas fechas inválidas (años 2202, 2222 y 6202) y no trae precio.
+  - **CNRT "Conectividad Terrestre Interurbana" (Argentina):** el portal respondió 403. Según los buscadores, tampoco trae precio.
+
+### 17-11-2026: construcción del ETL
+
+**Línea de buses: Supertransporte (Colombia)**, decisión del grupo. Fuentes de apoyo aprobadas para calcular su precio y distancia:
+- SERNAC (junio de 2024): precios de pasajes y km por carretera de 28 rutas chilenas.
+- DANE DIVIPOLA: coordenadas de los municipios colombianos.
+- GeoNames: coordenadas de las ciudades chilenas.
+
+Hallazgo al leer el PDF del SERNAC: los valores que daba el buscador para "Santiago–Arica $31.166", etc. eran **peajes** (Tabla 5), no pasajes. Los precios de bus están en la Tabla 7 y se transcribieron desde el PDF a `etl/referencias/sernac_2024_buses.csv`.
+
+**Etapas 1 y 2 en Python (`etl/python/`):**
+- `descargar_fuentes.py`:
+  - Agrega DIVIPOLA, SERNAC, GeoNames, la tabla de aeropuertos de BTS (`L_AIRPORT.csv`) y 72 días de Supertransporte (el 8 y el 22 de cada mes, solo despachos en origen).
+  - La API de datos.gov.co tarda varios minutos en agregar, así que se bajan filas sin agregar: unos 30 s a 2 min por día.
+  - Reintenta 3 veces si se corta la conexión. Si un archivo ya existe, solo lo registra en el manifiesto: en la segunda descarga, el servidor del INE respondió 404 a la tabla del Censo que ya estaba descargada.
+  - La exportación `rows.csv` de datos.gov.co cortaba la conexión, así que se usa el endpoint `/resource/`.
+- `clientes.py`:
+  - 9.500 personas mayores de 18 años, con comuna, sexo y edad muestreados del Censo 2024 (hoja 4 de la tabla D1), más 500 empresas.
+  - Los segmentos, afinidades y niveles de actividad son supuestos declarados en el código.
+  - Verificado: el 42,8 % vive en la Región Metropolitana (en el Censo, 40,0 %) y el 52,7 % de las personas son mujeres.
+- `preparar_datos.py`: muestra por línea en un formato común, con los códigos, unidades y moneda de cada fuente.
+  - **Buses:** muestra ponderada por pasajeros (cada fila, un pasaje) y día al azar dentro del mes. Tarifa = a + b · km por carretera, ajustada por mínimos cuadrados con el SERNAC: básico 6.918 + 18,8 CLP/km y lujo 6.917 + 26,6 CLP/km. Factor carretera / línea recta: 1,21 (mediana de las 28 rutas). Los meses de 2024 con menos de la mitad de los pasajeros del mismo mes de 2023 se reemplazan por ese mes de 2023 trasladado un año.
+  - **Trenes:** el monto bruto y el descuento se reconstruyen con las reglas del diccionario de la fuente (Railcard 1/3; Advance 1/2; Off-Peak 1/4). Los 4 meses de la fuente se trasladan a 9 ventanas de 4 meses que cubren 2023-2025.
+  - **Taxis:** taxis verdes, unas 700 filas por mes. Se descartan los registros con fecha fuera del mes del archivo.
+  - **Logística:** el ingreso es el flete del pedido. El peso sale de los productos, y la distancia, de los centroides de los códigos postales del vendedor y del comprador. Se conserva el mes y el día y el año pasa a 2023-2025.
+  - **Aerolínea:** muestra de 77,9 millones de filas leídas por trozos (76 s). Algunos archivos vienen en Latin-1. 2025 T3 y T4 se completan con 2024 T3 y T4 trasladados un año.
+  - **Delivery:** monto = pedido + tarifa de envío, y descuento = vouchers. La duración es el tiempo de ciclo de la fuente, porque `order_moment_delivered` solo está en el 5,3 % de los pedidos y `order_metric_cycle_time` en el 95,8 %.
+  - **Tipo de cambio:** se lee de las páginas del Banco Central con expresiones regulares, para no agregar `lxml` como dependencia.
+  - La preparación es reproducible (semilla fija) y tarda unos 80 s.
+
+**Base de datos (`sql/`):**
+- `02_stg.sql`: esquema `stg` con `cliente`, `zona`, `transaccion`, `tipo_cambio`, `equivalencia` y `rechazo`, más la vista `v_transaccion_conformada`. La vista convierte a CLP, km y kg, traduce los códigos de cada fuente con `equivalencia`, calcula la edad y asigna el motivo de rechazo según 15 reglas de calidad.
+- `03_preparar_carga.sql`: vacía el `dwh`, puebla `dim_tiempo` y crea "No informado" (llave 0) en canal y medio de pago.
+  - Hallazgo: `generate_series` con fechas e intervalo pasa por la zona horaria del servidor (`America/Santiago`), y los cambios de horario hacían saltar días: quedaban 1.095 en vez de 1.096. Se cambió a una serie de enteros sumada a una fecha.
+- `04_validar_carga.sql`: bloque `DO` que falla si staging ≠ hechos + rechazos, si la cantidad o el monto neto por línea no cuadran, o si falta alguna de las 6 líneas.
+
+**Apache Hop (`etl/hop/`):**
+- Pipelines:
+  - `01_staging.hpl`: 5 archivos CSV → `stg`.
+  - `02_dimensiones.hpl`: 5 dimensiones.
+  - `03_hechos.hpl`: vista conformada → filtro de reglas → 6 búsquedas de llaves sustitutas → `fact_venta`, y los rechazos → `stg.rechazo`.
+- Workflow `principal.hwf`: `02_stg.sql` → `03_preparar_carga.sql` → 3 pipelines → `04_validar_carga.sql`.
+- El XML se escribió con la misma estructura de los ejemplos que trae Hop 2.20 (`config/projects/samples`), y las etiquetas de la acción SQL se verificaron en su jar.
+- La conexión a la base lee variables (`${DB_HOST}`, etc.), y `etl/ejecutar_etl.py` se las pasa desde `.env` con `hop-run --system-properties`. El proyecto se registra en memoria (`--project-locations`, `--in-memory`), sin tocar la configuración de Hop del equipo.
+
+**Equivalencias (`etl/referencias/`):** `servicio.csv` (17 servicios), `canal_venta.csv` (7), `medio_pago.csv` (10) y `equivalencia.csv` (49 reglas de fuente → código).
+
+**Herramientas:**
+- `estadisticas_etl.py` genera las tablas del capítulo Estadísticas de Procesamiento a partir del registro de Hop y la base.
+- `exportar_dwh.py` genera `05_datos_dwh.sql`: el DWH poblado como script SQL (`pg_dump --inserts`, sin los metacomandos `\restrict`/`\unrestrict` que agrega pg_dump 17.11 y que pgAdmin no acepta). No se versiona, porque contiene datos derivados de Delivery Center; va solo al paquete de entrega.
+
+Verificación (con 13 de los 72 días de buses descargados):
+- **ETL:** el workflow de Hop terminó sin errores en el primer intento, en 16 s. Cargó 120.000 transacciones en staging, 118.263 en `fact_venta` y 1.737 rechazadas. La validación de consistencia pasó.
+- **Rechazos:** pedidos cancelados (delivery 943, logística 106), grupos de más de 9 pasajeros (aerolínea 293), viajes sin cobro o en disputa (taxis 166 y 48), montos en cero, duraciones negativas y distancias atípicas.
+- **Pruebas:** `pytest` aprobó 43 de 43: 29 del DDL, 4 de la preparación y 10 de consistencia de la carga.
+- **Script poblado:** `05_datos_dwh.sql` (15,4 MB) se ejecutó dos veces en una base nueva después de `01_ddl.sql`, en 5,7 s cada vez. Totales idénticos a la base del ETL: 118.263 ventas por 6.528.243.798,37 CLP.
+
+### 17-11-2026: informe, guía y paquete del Avance N°2
+
+**Informe** (título "Informe de Avance 2"):
+- **Fuentes de Información:**
+  - Buses pasan a Supertransporte.
+  - Tabla de tipo de cambio y fuentes de apoyo nuevas.
+  - Tratamientos previos con el modelo de tarifa, el relleno de 2024 y las ventanas de fechas.
+  - Estado de verificación al 17-11.
+  - Referencias nuevas en `referencias.bib`: `supertransporte`, `dane_divipola`, `sernac2024` y `geonames`. Se actualizaron `bcentral` (cuadros usados) y `delivery_center` (página original de Kaggle).
+- **Caso de Negocio:** Limitaciones actualizadas: fuentes de cuatro países, datos estimados, períodos completados, licencia de Delivery Center y tamaño de la muestra.
+- **Arquitectura Propuesta:**
+  - El diagrama marca extracción, Hop y staging como implementados.
+  - Tabla de herramientas con NumPy, PyArrow, requests y OpenJDK. Se compactó porque ya no cabía en una página.
+  - Flujo ETL con los componentes reales y 3 figuras de Hop GUI (07a a 07c, pendientes del grupo).
+- **Capítulo nuevo, Estadísticas de Procesamiento:** va entre Arquitectura y Modelamiento, en el orden del enunciado.
+  - 5 tablas generadas por `herramientas/estadisticas_etl.py` en `informe/secciones/estadisticas/`.
+  - 6 capturas de pgAdmin (06a a 06f) y 2 del grupo (07d y 07e).
+- **Scripts del Datawarehouse:** sección de los scripts del Avance N°2 y fragmento de las reglas de calidad de la vista.
+- **Capítulo nuevo, Seguimiento del Proyecto:** estado por avance, cambios respecto del Avance N°1 y próximos pasos.
+- **Resumen ejecutivo:** párrafo del Avance N°2.
+- **Anexo A:** origen de `dim_zona` actualizado, regenerado con `generar_diccionario.py`.
+
+**Capturas:**
+- `herramientas/capturar_pgadmin.py --avance2` genera 06a a 06f con las consultas de `sql/98_consultas_carga.sql`, sin modificar el DWH.
+- Las de Hop GUI (07a a 07e) las hace el grupo. Las instrucciones están en `docs/checklist_capturas.md`, porque el equipo no tiene Xvfb ni xdotool para automatizar una aplicación de escritorio.
+
+**Ejecutar y abrir Hop:**
+- `etl/abrir_hop_gui.py`: registra el proyecto `rapiditos` con `hop-conf` y abre Hop GUI con las credenciales como propiedades de Java (`HOP_OPTIONS`). `hop-conf` agregó `"parentProjectName": "default"` a `project-config.json`; el proyecto `default` existe en toda instalación de Hop.
+- `03_hechos.hpl` vacía `fact_venta` y `stg.rechazo` al inicio, para que el grupo pueda ejecutarlo solo en Hop GUI (captura 07d) sin duplicar ventas. Se probó dos veces seguidas con `hop-run`.
+- `etl/ejecutar_etl.py` lee `.env` con la biblioteca estándar, en vez de python-dotenv, para que el profesor no necesite paquetes de Python. Se comparó con `dotenv_values`: mismos valores.
+
+**Guía de Windows:** nueva sección C:
+- C.1: cargar `05_datos_dwh.sql` con pgAdmin, psql o Docker.
+- C.2: ejecutar el ETL con Java, Hop 2.20.0 y Python, creando el `.env`.
+- Las rutas de Windows van con `\lstinline`: `\detokenize` insertaba espacios después de cada `\`.
+
+**Paquete** (`herramientas/empaquetar_entrega.py`, ahora del Avance N°2):
+- 36 archivos con la estructura del repositorio (`sql/`, `etl/`, `data/processed/`), porque Hop ubica los archivos con rutas relativas.
+- Incluye `05_datos_dwh.sql` y los CSV preparados, y un `LEEME.txt` con los 3 entregables. Advierte que contienen datos derivados de Delivery Center y no deben redistribuirse.
+
+Verificación:
+- **Compilación:** el informe (71 páginas) y la guía (6 páginas) compilan con LuaLaTeX sin avisos nuevos. El único aviso, de `babelbib` en el preámbulo, ya existía.
+- **Paquete de punta a punta:** se descomprimió en una carpeta temporal y se creó una base nueva. Se ejecutó `01_ddl.sql` y luego `etl/ejecutar_etl.py` con el Python del sistema, aislado (`-I`) y sin variables de entorno.
+  - Terminó con código 0: 118.263 ventas por 6.528.243.798,37 CLP, igual que la base del repositorio.
+  - El registro de Hop confirma que leyó los CSV del paquete, no los del repositorio, aunque el proyecto `rapiditos` está registrado en este equipo apuntando al repositorio: `--project-locations` usa la ruta indicada.
+- **Sin probar:** la guía y el ETL no se probaron en Windows.
+
+### 17-11-2026: ejecución final del ETL
+
+**Descarga de buses:**
+- Se cortó a los 61 de 72 días con `ChunkedEncodingError`: el servidor cerró la conexión a mitad de la respuesta, y los reintentos solo cubrían errores al conectar. Ahora también reintentan esos cortes y los tiempos de espera.
+- Al retomar se completaron los 72 días (126 archivos en el manifiesto).
+- Se confirma el vacío de 2024 en la fuente: entre 0 y 93 filas por día de febrero a octubre, frente a unas 30 mil por día en 2023 y 2025.
+
+**Ejecución final** (`python etl/ejecutar_etl.py --preparar`):
+- **Lectura:** 81.748.415 filas de las fuentes, de ellas 1.260.343 de buses y 77.949.326 de BTS.
+- **Carga:** 120.000 transacciones en staging, 118.263 en `fact_venta` (98,6 %) y 1.737 rechazadas. Son las mismas cifras de la prueba anterior: la semilla es fija y los datos de buses no tienen rechazos.
+- **Monto neto total:** 6.527.727.598,37 CLP.
+- **Buses por año:** 8.434, 8.436 y 8.130 ventas en 2023, 2024 y 2025.
+- **Tiempos:** 102 s de preparación en Python (91 s de ellos en BTS) y 17 s del workflow de Hop.
+
+Verificación:
+- **Pruebas:** `pytest` aprobó 43 de 43.
+- **Regenerados:** las tablas de Estadísticas de Procesamiento, las capturas 06a a 06f, `05_datos_dwh.sql` (15,4 MB), el informe (72 páginas, sin avisos nuevos), la guía y el paquete (11,3 MB, 36 archivos).
+- **Paquete de punta a punta:** en una base nueva, `05_datos_dwh.sql` y el ETL de Hop del paquete (con el Python del sistema) dejaron el mismo resultado: 118.263 ventas por 6.527.727.598,37 CLP.
+- **Pendiente del grupo:** las capturas de Hop GUI 07a a 07e (instrucciones en `docs/checklist_capturas.md`). Después hay que recompilar el informe y volver a empaquetar.

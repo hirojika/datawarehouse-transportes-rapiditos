@@ -7,9 +7,11 @@
 \section{Scripts del Datawarehouse}
 \label{sec:scripts}
 
-Este capítulo presenta los scripts que crean y verifican el Datawarehouse. En
-el Avance N°1 el script crea la estructura del modelo multidimensional
-\emph{sin datos}; los scripts de carga se agregan en el Avance N°2.
+Este capítulo presenta los scripts que crean, pueblan y verifican el
+Datawarehouse. En el Avance N°1 se entregó el script que crea la estructura del
+modelo multidimensional \emph{sin datos}. En el Avance N°2 se agregan los
+scripts del staging, de la carga y de su validación, y el script con el
+Datawarehouse construido (Sección~\ref{sec:scripts_avance2}).
 
 \subsection{Scripts Entregados}
 
@@ -25,12 +27,19 @@ el Avance N°1 el script crea la estructura del modelo multidimensional
     \midrule
     \bd{sql/01_ddl.sql} & Crea el esquema \bd{dwh} con las seis dimensiones,
       la tabla de hechos, sus restricciones, índices y comentarios \\
+    \bd{sql/02_stg.sql} a \bd{sql/04_validar_carga.sql} & Staging,
+      preparación y validación de la carga (Avance N°2,
+      Tabla~\ref{tab:scripts_avance2}) \\
+    \bd{05_datos_dwh.sql} & Datawarehouse construido: los datos de las siete
+      tablas (Avance N°2) \\
     \bd{sql/99_validacion.sql} & Consulta el catálogo de PostgreSQL para
       verificar tablas, columnas, llaves, restricciones, índices y
       nomenclatura \\
     \bd{tests/test_ddl.py} & 29 pruebas automáticas (pytest) que crean una
       base de prueba, ejecutan el script dos veces y comparan el resultado con
       el diseño \\
+    \bd{tests/test_carga.py} y \bd{tests/test_preparar.py} & 14 pruebas de la
+      consistencia de la carga y de la preparación de datos (Avance N°2) \\
     \bd{docker-compose.yml} & Define los servicios PostgreSQL 17 y pgAdmin 4 \\
     \bd{herramientas/capturar_pgadmin.py} & Ejecuta el script y la validación
       en pgAdmin y toma las capturas del informe (Playwright) \\
@@ -173,3 +182,71 @@ restricción ni índice queda fuera de la norma de nomenclatura.
 \captura{05c_validacion_resumen.png}{\bd{sql/99_validacion.sql}: resumen de columnas y llaves por tabla\label{fig:val_resumen}}
 \captura{05d_validacion_checks.png}{\bd{sql/99_validacion.sql}: restricciones \bd{CHECK}\label{fig:val_checks}}
 \captura{05e_validacion_nomenclatura.png}{\bd{sql/99_validacion.sql}: control de nomenclatura (0 filas fuera de norma)\label{fig:val_nomenclatura}}
+
+\subsection{Scripts de Carga y Datawarehouse Construido}
+\label{sec:scripts_avance2}
+
+La Tabla~\ref{tab:scripts_avance2} lista los scripts que se agregan en el
+Avance N°2. Los scripts SQL siguen las mismas reglas que \bd{01_ddl.sql}:
+codificación UTF-8 declarada, una sola transacción, ejecución idempotente,
+comentarios en todas las tablas y columnas, y ningún metacomando de \bd{psql},
+para que funcionen igual en \bd{psql} y en pgAdmin. Los scripts 02 a 04 los
+ejecuta el workflow principal de Apache Hop
+(Sección~\ref{sec:flujo_etl}).
+
+\begin{table}[H]
+  \centering
+  \caption{Scripts agregados en el Avance N°2}
+  \label{tab:scripts_avance2}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.4cm}
+                                  >{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Archivo} & \textbf{Propósito} \\
+    \midrule
+    \bd{sql/02_stg.sql} & Crea el esquema \bd{stg}: clientes, zonas,
+      transacciones, tipo de cambio, equivalencias y rechazos, y la vista
+      \bd{v_transaccion_conformada} con las conversiones y las reglas de
+      calidad \\
+    \bd{sql/03_preparar_carga.sql} & Vacía el esquema \bd{dwh}, puebla
+      \bd{dim_tiempo} con los 1.096 días de 2023 a 2025 y crea los registros
+      «No informado» \\
+    \bd{sql/04_validar_carga.sql} & Detiene el ETL si alguna transacción se
+      pierde o si la cantidad y el monto neto por línea no cuadran \\
+    \bd{05_datos_dwh.sql} & Datawarehouse construido: inserta los datos de las
+      siete tablas del esquema \bd{dwh} (requiere \bd{01_ddl.sql}). Se genera
+      con \bd{pg_dump} desde la base poblada por el ETL \\
+    \bd{sql/98_consultas_carga.sql} & Consultas de verificación del
+      Datawarehouse poblado: filas por tabla, rechazos, conciliación e
+      indicadores por año \\
+    \bd{etl/} & Proyecto de integración: scripts de Python (\bd{etl/python/}),
+      proyecto de Apache Hop (\bd{etl/hop/}), catálogos y equivalencias
+      (\bd{etl/referencias/}) y el ejecutor \bd{etl/ejecutar_etl.py} \\
+    \bd{herramientas/estadisticas_etl.py} & Genera las tablas de la sección
+      Estadísticas de Procesamiento desde el registro de Hop y la base \\
+    \bd{herramientas/exportar_dwh.py} & Genera \bd{05_datos_dwh.sql} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+La Figura~\ref{fig:vista_reglas} muestra las reglas de calidad de la vista
+\bd{stg.v_transaccion_conformada}. Una transacción se carga en
+\bd{fact_venta} solo si el motivo de rechazo queda vacío; si no, el pipeline
+de hechos la registra en \bd{stg.rechazo} con su motivo. Los umbrales de
+«distancia atípica» y «monto atípico» son reglas de negocio del proyecto.
+
+\begin{figure}[H]
+  \centering
+  \caption{Fragmento de \bd{sql/02_stg.sql}: reglas de calidad de la vista conformada}
+  \label{fig:vista_reglas}
+  \sinunicode{\lstinputlisting[style=sql, firstline=216, lastline=234,
+                   firstnumber=216]{../sql/02_stg.sql}}
+\end{figure}
+
+El script \bd{05_datos_dwh.sql} permite revisar el Datawarehouse construido sin
+instalar Apache Hop ni descargar las fuentes: después de \bd{01_ddl.sql}, carga
+en pocos segundos los mismos datos que dejó el ETL. Se probó en una base nueva,
+dos veces seguidas, y los totales coincidieron con los de la base del ETL. No
+se publica en el repositorio porque contiene datos derivados de Delivery
+Center, cuya licencia no permite redistribuirlos; se incluye solo en el
+paquete de entrega del curso.

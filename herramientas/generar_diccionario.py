@@ -39,8 +39,9 @@ ORIGEN = {
     "sexo y edad del Censo de Población y Vivienda 2024.",
     "dim_servicio": "Catálogo de los servicios de cada línea de negocio, con los atributos que "
     "informa cada fuente (tipo y clase de servicio, medio de transporte).",
-    "dim_zona": "Tablas de zonas de cada fuente (zonas de taxi de Nueva York, puntos de ANTT, "
-    "estaciones del Reino Unido, aeropuertos de EE.UU.) y comunas de Chile del Censo 2024.",
+    "dim_zona": "Tablas de zonas de cada fuente: zonas de taxi de Nueva York, aeropuertos de "
+    "EE.UU. (BTS), estaciones del Reino Unido, ciudades de Brasil (Olist y Delivery Center) y "
+    "municipios de Colombia (DIVIPOLA del DANE).",
     "dim_canal_venta": "Canales de compra informados por las fuentes, normalizados a un "
     "catálogo común.",
     "dim_medio_pago": "Tipos de pago informados por las fuentes, normalizados a un catálogo "

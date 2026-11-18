@@ -43,30 +43,31 @@ Windows.
 
     % Capa 1: una fuente por línea de negocio y las fuentes de apoyo
     \foreach \nombre/\texto [count=\i] in {
-        f1/\textbf{Buses}\\ANTT,
+        f1/\textbf{Buses}\\Supertransporte,
         f2/\textbf{Trenes}\\UK Train Rides,
         f3/\textbf{Taxis}\\NYC TLC,
         f4/\textbf{Logística}\\Olist,
         f5/\textbf{Aerolíneas}\\BTS DB1B,
         f6/\textbf{Delivery}\\Delivery Center,
-        f7/{\textbf{Apoyo}\\Censo 2024, BCCh}} {
+        f7/{\textbf{Apoyo}\\Censo, BCCh, SERNAC}} {
       \node[fuente] (\nombre) at ({3.85+(\i-1)*1.84}, 0) {\texto};
     }
 
     % Capa 2: extracción
-    \node[comp, text width=12.4cm] (ext) at (9.35,-1.75)
-      {\textbf{Python} (pandas, SQLAlchemy, psycopg): descarga de las fuentes y
-       archivos originales en \texttt{data/raw/}};
+    \node[hecho, text width=12.4cm] (ext) at (9.35,-1.75)
+      {\textbf{Python} (pandas, requests): descarga de las fuentes a
+       \texttt{data/raw/}; muestreo, clientes sintéticos y archivos preparados en
+       \texttt{data/processed/}};
 
     % Capa 3: integración
-    \node[comp, text width=12.4cm] (hop) at (9.35,-3.5)
-      {\textbf{Apache Hop} (pipelines y workflows, ejecutados con
-       \texttt{hop-run}): limpieza y validación; normalización de zonas,
-       monedas (CLP), unidades y catálogos; asignación de clientes sintéticos;
-       carga de dimensiones y hechos; estadísticas de procesamiento};
+    \node[hecho, text width=12.4cm] (hop) at (9.35,-3.5)
+      {\textbf{Apache Hop} (3 pipelines y un workflow, ejecutados con
+       \texttt{hop-run}): carga a staging; conversión de monedas (CLP),
+       unidades y códigos; reglas de calidad y rechazos; carga de dimensiones y
+       hechos; validación de consistencia};
 
     % Capa 4: almacenamiento en PostgreSQL 17
-    \node[comp, text width=3.9cm] (stg) at (5.05,-5.25)
+    \node[hecho, text width=3.9cm] (stg) at (5.05,-5.25)
       {\textbf{PostgreSQL 17}\\esquema \texttt{stg} (staging)};
     \node[hecho, text width=3.9cm] (dwh) at (10.0,-5.25)
       {\textbf{PostgreSQL 17}\\esquema \texttt{dwh} (modelo estrella)};
@@ -104,10 +105,10 @@ Windows.
     % no se monte sobre sí misma con ninguna tipografía
     \node[muestra, draw=verdeutem!75!black, fill=verdeutem!18, anchor=west]
       (l1) at (0.4,-10.0) {};
-    \node[anchor=west] (t1) at (l1.east) {Implementado en el Avance N°1};
+    \node[anchor=west] (t1) at (l1.east) {Implementado (Avances N°1 y N°2)};
     \node[muestra, draw=azulutem, fill=azulutem!6, anchor=west]
       (l2) at ([xshift=6mm]t1.east) {};
-    \node[anchor=west] (t2) at (l2.east) {Se implementa en los Avances N°2 y N°3};
+    \node[anchor=west] (t2) at (l2.east) {Se implementa en el Avance N°3};
     \node[muestra, draw=gray!70, fill=gray!8, anchor=west]
       (l3) at ([xshift=6mm]t2.east) {};
     \node[anchor=west] at (l3.east) {Fuente externa};
@@ -135,11 +136,12 @@ versiones son las instaladas en el equipo de desarrollo y quedan fijadas en
     \toprule
     \textbf{Capa} & \textbf{Herramienta} & \textbf{Versión} & \textbf{Función} \\
     \midrule
-    Extracción & Python & 3.13.5 & Lenguaje de los scripts de extracción y de apoyo \\
-               & pandas & 3.1.0 & Lectura y preparación de archivos CSV, Excel y Parquet \\
+    Extracción & Python y requests & 3.13.5 y 2.34.2 & Scripts de extracción y preparación; descarga de las fuentes \\
+               & pandas, NumPy y PyArrow & 3.1.0, 2.5.4 y 26.0.0 & Lectura de CSV, Excel y Parquet; muestreo \\
                & SQLAlchemy y psycopg & 2.1.6 y 3.3.8 & Conexión de Python con PostgreSQL \\
     \midrule
-    Integración & Apache Hop~\cite{apache_hop} & 2.20.0 & Pipelines y workflows ETL, ejecutados por línea de comandos (\bd{hop-run}); requiere Java 17 o superior \\
+    Integración & Apache Hop~\cite{apache_hop} & 2.20.0 & Pipelines y workflows ETL, ejecutados por línea de comandos (\bd{hop-run}) \\
+                & OpenJDK & 21.0.13 & Java, que requiere Apache Hop (17 o superior) \\
     \midrule
     Almacenamiento & PostgreSQL~\cite{postgresql} & 17.11 & Motor del Datawarehouse (esquemas \bd{stg} y \bd{dwh}) \\
                    & pgAdmin 4~\cite{pgadmin} & 9.18.0 & Administración web de la base, Query Tool y ERD Tool \\
@@ -154,11 +156,10 @@ versiones son las instaladas en el equipo de desarrollo y quedan fijadas en
                 & LaTeX (LuaLaTeX) & TeX Live 2026 & Redacción de este informe \\
     \bottomrule
   \end{tabularx}
-  \nota{Versiones instaladas y verificadas en el equipo de desarrollo, salvo
-  Apache Hop y Cube, que se instalan en el Avance N°2 (ETL) y el Avance N°3
-  (cubo). Para ellas se fijaron las últimas versiones estables publicadas al
-  5 de noviembre de 2026: Apache Hop 2.20.0 (\bd{downloads.apache.org}) y la
-  imagen \bd{cubejs/cube:v1.8.19} (Docker Hub).}
+  \nota{Versiones instaladas y verificadas en el equipo de desarrollo. Cube se
+  instala en el Avance N°3; su imagen (\bd{cubejs/cube:v1.8.19}) se fijó el 5
+  de noviembre de 2026. Apache Hop se descargó de \bd{downloads.apache.org},
+  con su suma SHA-512 verificada.}
 \end{table}
 
 \subsection{Capas de Almacenamiento}
@@ -172,11 +173,12 @@ usuario:
   \item \textbf{\bd{data/processed/}:} archivos intermedios, como la muestra
         de viajes de taxi o los clientes sintéticos generados.
   \item \textbf{Esquema \bd{stg} (staging):} tablas con los datos de cada
-        fuente tal como llegan, donde el ETL los limpia y normaliza. Se agrega
-        en el Avance N°2.
+        fuente tal como llegan, donde el ETL los convierte, los valida y
+        registra los rechazos. Implementado en el Avance N°2
+        (\bd{sql/02_stg.sql}, Sección~\ref{sec:scripts_avance2}).
   \item \textbf{Esquema \bd{dwh}:} el modelo estrella definitivo
-        (Sección~\ref{sec:modelo}), que solo recibe datos validados. Está
-        implementado en este avance.
+        (Sección~\ref{sec:modelo}), que solo recibe datos validados. Se creó
+        en el Avance N°1 y se pobló en el Avance N°2.
 \end{enumerate}
 
 Separar \bd{stg} de \bd{dwh} evita que un error de transformación deje datos
@@ -184,42 +186,69 @@ inconsistentes en el modelo: si una carga falla, el esquema \bd{dwh} no
 cambia.
 
 \subsection{Flujo de Integración (ETL)}
+\label{sec:flujo_etl}
 
-La Tabla~\ref{tab:flujo_etl} resume las etapas del proceso de integración que
-se construirá en el Avance N°2. El número de registros leídos, cargados y
-rechazados en cada etapa formará la sección Estadísticas de Procesamiento.
+La Tabla~\ref{tab:flujo_etl} resume las etapas del proceso de integración,
+construido en el Avance N°2. Las etapas 1 y 2 son scripts de Python; las
+etapas 3 a 7 forman el proyecto de integración de Apache Hop (carpeta
+\bd{etl/hop/}), que orquesta el workflow \bd{principal.hwf}
+(Figura~\ref{fig:hop_workflow}). Un solo comando,
+\bd{python etl/ejecutar_etl.py}, lee las credenciales de la base desde el
+archivo \bd{.env} y ejecuta el workflow con \bd{hop-run}. Cada ejecución es una
+carga completa y repetible: recrea el staging, vacía el Datawarehouse y lo
+vuelve a poblar. Los resultados de cada etapa se presentan en la sección
+Estadísticas de Procesamiento (Sección~\ref{sec:estadisticas}).
 
 \begin{table}[H]
   \centering
   \caption{Etapas del flujo de integración}
   \label{tab:flujo_etl}
   \small
-  \begin{tabularx}{\linewidth}{@{}c>{\raggedright\arraybackslash}p{3.2cm}
-                                  >{\raggedright\arraybackslash}p{2.4cm}
+  \begin{tabularx}{\linewidth}{@{}c>{\raggedright\arraybackslash}p{2.6cm}
+                                  >{\raggedright\arraybackslash}p{3.9cm}
                                   >{\raggedright\arraybackslash}X@{}}
     \toprule
-    \textbf{N°} & \textbf{Etapa} & \textbf{Herramienta} & \textbf{Descripción} \\
+    \textbf{N°} & \textbf{Etapa} & \textbf{Componente} & \textbf{Descripción} \\
     \midrule
-    1 & Extracción & Python & Descarga de las fuentes a \bd{data/raw/} y
-      muestreo de las fuentes de gran volumen \\
-    2 & Clientes sintéticos & Python & Generación de los clientes residentes
-      en Chile con las distribuciones del Censo 2024 \\
-    3 & Carga a staging & Apache Hop & Lectura de los archivos y carga en el
-      esquema \bd{stg} \\
-    4 & Transformación & Apache Hop & Limpieza, conversión de unidades y
-      moneda, traslado de fechas a 2023--2025, normalización de zonas,
-      canales y medios de pago, y asignación de cada transacción a un
-      cliente \\
-    5 & Carga de dimensiones & Apache Hop & Inserción de los registros nuevos
-      en las seis dimensiones, buscando por su llave natural
-      (\bd{codigo_<entidad>}) \\
-    6 & Carga de hechos & Apache Hop & Búsqueda de las llaves sustitutas de
-      cada dimensión e inserción en \bd{fact_venta} \\
-    7 & Validación & Apache Hop y SQL & Conteo de registros por etapa,
-      registros rechazados y comparación de totales con las fuentes \\
+    1 & Extracción & Python:
+      \bd{descargar_fuentes.py} & Descarga de las fuentes públicas a
+      \bd{data/raw/}, con un manifiesto de tamaño y huella SHA-256 \\
+    2 & Preparación y clientes sintéticos & Python: \bd{preparar_datos.py} y
+      \bd{clientes.py} & Muestreo, traslado de fechas a 2023--2025, tarifa de
+      buses, clientes sintéticos y asignación de cada transacción a un cliente.
+      Deja cuatro archivos CSV en \bd{data/processed/} \\
+    3 & Carga a staging & Hop: \bd{02_stg.sql} y pipeline \bd{01_staging} &
+      Recreación del esquema \bd{stg} y carga de los archivos preparados y de
+      las tablas de equivalencias (Figura~\ref{fig:hop_staging}) \\
+    4 & Transformación & Vista \bd{stg.v_transaccion_conformada} &
+      Conversión de monedas a CLP, de millas y metros a kilómetros y de gramos
+      a kilogramos; traducción de los códigos de cada fuente a los del modelo;
+      cálculo de la edad y del monto neto; 15 reglas de calidad que asignan el
+      motivo de rechazo \\
+    5 & Carga de dimensiones & Hop: \bd{03_preparar_carga.sql} y pipeline
+      \bd{02_dimensiones} & \bd{dim_tiempo} (2023--2025) y los registros «No
+      informado» por SQL; las otras cinco dimensiones desde staging y desde los
+      catálogos; la base genera las llaves sustitutas \\
+    6 & Carga de hechos & Hop: pipeline \bd{03_hechos} & Filtro de las reglas de
+      calidad; búsqueda de las seis llaves sustitutas por llave natural; carga
+      de \bd{fact_venta} y de los rechazos en \bd{stg.rechazo}
+      (Figura~\ref{fig:hop_hechos}) \\
+    7 & Validación & Hop: \bd{04_validar_carga.sql}; pruebas con pytest &
+      El workflow falla si alguna transacción se pierde o si la cantidad y el
+      monto por línea no cuadran entre staging y \bd{fact_venta} \\
     \bottomrule
   \end{tabularx}
 \end{table}
+
+Las reglas de traducción de códigos, como «Credit Card» a crédito o
+«Station» a boletería, son reglas de negocio del proyecto: viven en los
+catálogos de \bd{etl/referencias/} (17 servicios, 7 canales de venta, 10 medios
+de pago y 49 equivalencias), no en el código, y Hop las carga en cada
+ejecución.
+
+\captura{07a_hop_workflow_principal.png}{Workflow principal del ETL en Apache Hop GUI\label{fig:hop_workflow}}
+\captura{07b_hop_pipeline_staging.png}{Pipeline \bd{01_staging} en Apache Hop GUI\label{fig:hop_staging}}
+\captura{07c_hop_pipeline_hechos.png}{Pipeline \bd{03_hechos} en Apache Hop GUI: reglas de calidad, búsqueda de llaves sustitutas y carga de \bd{fact_venta}\label{fig:hop_hechos}}
 
 \subsection{Entorno de Ejecución}
 

@@ -27,6 +27,9 @@ Uso, desde la raíz del repositorio:
   python herramientas/capturar_pgadmin.py                # todas
   python herramientas/capturar_pgadmin.py --solo-figura  # solo la figura del esquema,
                                                          # sin volver a ejecutar el DDL
+  python herramientas/capturar_pgadmin.py --avance2      # Avance N°2: capturas 06a-06f de
+                                                         # sql/98_consultas_carga.sql con el
+                                                         # DWH poblado (no lo modifica)
 """
 
 import argparse
@@ -72,6 +75,16 @@ CONSULTAS_VALIDACION = {
     "05e_validacion_nomenclatura": 9,
 }
 
+# Avance N°2 (--avance2): captura -> número de la consulta en sql/98_consultas_carga.sql
+CONSULTAS_CARGA = {
+    "06a_carga_filas_por_tabla": 1,
+    "06b_carga_por_linea": 2,
+    "06c_carga_rechazos": 3,
+    "06d_carga_conciliacion": 4,
+    "06e_carga_ventas_linea_anio": 5,
+    "06f_carga_indicadores_anio": 6,
+}
+
 # Medidas del Query Tool en píxeles CSS, para dimensionar la ventana y los paneles
 # de modo que se vean la consulta completa y todas las filas del resultado
 INICIO_EDITOR = 165  # borde superior del editor
@@ -101,9 +114,7 @@ def docker_compose(*args: str) -> subprocess.CompletedProcess:
 
 def setup_pgadmin(*args: str) -> subprocess.CompletedProcess:
     """Ejecuta el setup.py de pgAdmin dentro de su contenedor."""
-    return docker_compose(
-        "exec", "-T", "pgadmin", "/venv/bin/python3", "/pgadmin4/setup.py", *args
-    )
+    return docker_compose("exec", "-T", "pgadmin", "/venv/bin/python3", "/pgadmin4/setup.py", *args)
 
 
 def crear_usuario_capturas() -> str:
@@ -143,9 +154,9 @@ def verificar_dwh_sin_datos() -> None:
                 )
 
 
-def consultas_validacion() -> dict[int, str]:
-    """Separa sql/99_validacion.sql en sus consultas numeradas ('-- N. ...')."""
-    texto = (RAIZ / "sql" / "99_validacion.sql").read_text(encoding="utf-8")
+def consultas_validacion(archivo: str = "99_validacion.sql") -> dict[int, str]:
+    """Separa un script de sql/ en sus consultas numeradas ('-- N. ...')."""
+    texto = (RAIZ / "sql" / archivo).read_text(encoding="utf-8")
     partes = re.split(r"(?m)^(?=-- \d+\. )", texto)
     return {
         int(re.match(r"-- (\d+)\.", parte).group(1)): parte.strip() + "\n"
@@ -395,9 +406,7 @@ def figura_esquema(pag: Page) -> None:
         sys.exit("No se abrió el ERD Tool con las 7 tablas.")
     # Solo se ensancha el recuadro de cada tabla, para que cada columna quede en una línea.
     # Las tablas se arrastran después, así pgAdmin vuelve a calcular las líneas.
-    erd.add_style_tag(
-        content=f".TableNode-tableNode {{ width: {ANCHO_TABLA_ERD}px !important; }}"
-    )
+    erd.add_style_tag(content=f".TableNode-tableNode {{ width: {ANCHO_TABLA_ERD}px !important; }}")
     pag.wait_for_timeout(1500)
 
     tablas = {}
@@ -460,12 +469,15 @@ def figura_esquema(pag: Page) -> None:
     print(f"  {FIGURA_ESQUEMA.relative_to(RAIZ, walk_up=True)}")
 
 
-def capturas_validacion(pag: Page, qt: Frame) -> None:
-    """05a-05e: cada consulta de sql/99_validacion.sql con su resultado, en el mismo Query Tool."""
-    consultas = consultas_validacion()
+def capturas_validacion(
+    pag: Page, qt: Frame, archivo: str = "99_validacion.sql", capturas=CONSULTAS_VALIDACION
+) -> None:
+    """Cada consulta numerada de un script de sql/ con su resultado, en el mismo Query Tool
+    (05a-05e del Avance N°1; 06a-06f del Avance N°2)."""
+    consultas = consultas_validacion(archivo)
     pag.locator("[role=tab]", has_text="rapiditos/rapiditos@").first.click()
     pag.locator("button[aria-label='Hide Object Explorer']").click()  # más ancho para la grilla
-    for nombre, numero in CONSULTAS_VALIDACION.items():
+    for nombre, numero in capturas.items():
         consulta = consultas[numero]
         ejecutar(pag, qt, consulta)
         qt.locator("[role=tab]", has_text="Data Output").first.click()
@@ -484,8 +496,14 @@ def main() -> None:
         action="store_true",
         help="genera solo docs/diagramas/esquema_estrella.png, sin ejecutar el DDL",
     )
-    solo_figura = argumentos.parse_args().solo_figura
-    if not solo_figura:
+    argumentos.add_argument(
+        "--avance2",
+        action="store_true",
+        help="solo las capturas 06a-06f de sql/98_consultas_carga.sql (no modifica el DWH)",
+    )
+    opciones = argumentos.parse_args()
+    solo_figura = opciones.solo_figura
+    if not (solo_figura or opciones.avance2):
         verificar_dwh_sin_datos()
     clave = crear_usuario_capturas()
     CAPTURAS.mkdir(parents=True, exist_ok=True)
@@ -498,7 +516,11 @@ def main() -> None:
         entrar(pag, clave)
         conectar(pag)
         expandir(pag, ["Databases", "rapiditos"])
-        if solo_figura:
+        if opciones.avance2:
+            capturas_validacion(
+                pag, abrir_query_tool(pag), "98_consultas_carga.sql", CONSULTAS_CARGA
+            )
+        elif solo_figura:
             figura_esquema(pag)
         else:
             qt = captura_ddl(pag)

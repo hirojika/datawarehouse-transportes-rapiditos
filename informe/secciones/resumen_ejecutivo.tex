@@ -36,12 +36,23 @@ calibrada con el Censo de Población y Vivienda 2024 del INE. Los datos
 sintéticos se identifican como tales en el código, en la base de datos y en
 este informe.
 
-Este Informe de Avance 1 presenta el caso de negocio, las fuentes de
-información, la arquitectura propuesta, el modelo multidimensional y el script
-SQL que lo crea, sin datos. El script se ejecutó en PostgreSQL 17.11 y su
-resultado se verificó con consultas al catálogo y con 29 pruebas automáticas:
-el esquema \bd{dwh} contiene 7 tablas, 58 columnas, 7 llaves foráneas y 20
-reglas de validación, y todas las restricciones e índices cumplen la norma de
-nomenclatura. El poblamiento mediante ETL y las estadísticas de procesamiento
-corresponden al Avance N°2; el cubo, los KPI, el dashboard y las
-recomendaciones, al Avance N°3.
+El Avance N°1 presentó el caso de negocio, las fuentes de información, la
+arquitectura propuesta, el modelo multidimensional y el script SQL que lo
+crea, sin datos.
+
+Este Informe de Avance 2 agrega el proceso que puebla el Datawarehouse. Las
+fuentes se descargaron y verificaron, y la de buses se reemplazó por datos de
+la Superintendencia de Transporte de Colombia, porque el portal brasileño
+propuesto rechazó las descargas. La preparación en Python toma una muestra de
+120.000 transacciones de las seis líneas y genera 10.000 clientes sintéticos.
+El proyecto de integración en Apache Hop las carga en un esquema de staging,
+las convierte a pesos chilenos, kilómetros y kilogramos, aplica 15 reglas de
+calidad y carga las dimensiones y la tabla de hechos. En la ejecución final se
+cargaron 118.263 ventas (98,6~\%) y se rechazaron 1.737, cada una con su
+motivo: pedidos cancelados, viajes sin cobro, montos en cero o distancias
+imposibles. El workflow termina con una validación que comprueba que ninguna
+transacción se pierde y que la cantidad y el monto por línea cuadran entre el
+staging y el Datawarehouse, y 43 pruebas automáticas verifican la consistencia
+de la carga. El Datawarehouse construido se entrega además como un script SQL
+que se ejecuta sin instalar Hop. El cubo, los KPI, el dashboard y las
+recomendaciones corresponden al Avance N°3.

@@ -42,10 +42,14 @@ psql -U <usuario> -d rapiditos -P pager=off -f 99_validacion.sql
         filas.
 \end{enumerate}
 
+El Datawarehouse construido del Avance N°2 se carga del mismo modo: después
+de \bd{01_ddl.sql}, ejecutar \bd{05_datos_dwh.sql}, que también es autónomo.
+
 Para Windows se entrega además la guía \bd{guia_ejecucion_windows.pdf}, que
 detalla paso a paso la instalación de PostgreSQL y pgAdmin, la ejecución con
-\bd{psql} y una alternativa con Docker Desktop que no requiere instalar
-PostgreSQL ni ningún otro archivo del proyecto.
+\bd{psql}, una alternativa con Docker Desktop que no requiere instalar
+PostgreSQL, la carga del Datawarehouse construido y la ejecución del ETL con
+Apache Hop.
 
 \subsubsection{Entorno de Desarrollo del Grupo}
 
@@ -70,20 +74,25 @@ docker compose ps         # ambos servicios deben aparecer activos
 docker compose exec postgres psql -U rapiditos -d rapiditos \
     -v ON_ERROR_STOP=1 -f /sql/01_ddl.sql
 \end{lstlisting}
-  \item Crear el entorno de Python y ejecutar las pruebas automáticas, que
-        usan una base de prueba aparte y nunca modifican \bd{rapiditos}.
+  \item Crear el entorno de Python, ejecutar el ETL (descarga de las fuentes,
+        preparación y workflow de Apache Hop, con Hop 2.20.0 instalado según
+        el \bd{README.md}) y las pruebas automáticas. Las pruebas del DDL usan
+        una base aparte; las de la carga solo leen \bd{rapiditos}.
 \begin{lstlisting}[style=consola]
 python -m venv .venv
 source .venv/bin/activate # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+python etl/python/descargar_fuentes.py   # más las descargas manuales de data/LEEME.md
+python etl/ejecutar_etl.py --preparar
 pytest -v
 \end{lstlisting}
   \item Opcionalmente, regenerar el diccionario de datos del Anexo~A y las
         capturas del informe.
 \begin{lstlisting}[style=consola]
 python herramientas/generar_diccionario.py
+python herramientas/estadisticas_etl.py
 python -m playwright install chromium   # una sola vez
-python herramientas/capturar_pgadmin.py
+python herramientas/capturar_pgadmin.py --avance2
 \end{lstlisting}
 \end{enumerate}
 
@@ -115,30 +124,39 @@ describe su contenido.
     \toprule
     \textbf{Carpeta o archivo} & \textbf{Contenido} \\
     \midrule
-    \bd{sql/} & Scripts del Datawarehouse: \bd{01_ddl.sql} (creación del
-      modelo estrella) y \bd{99_validacion.sql} (verificación) \\
+    \bd{sql/} & Scripts del Datawarehouse: creación del modelo estrella
+      (\bd{01_ddl.sql}), staging, preparación y validación de la carga
+      (\bd{02} a \bd{04}) y consultas de verificación (\bd{98} y \bd{99}) \\
+    \bd{etl/} & Proyecto de integración: scripts de Python, proyecto de
+      Apache Hop, catálogos y equivalencias, y el ejecutor del ETL \\
+    \bd{data/LEEME.md} & Datasets de cada línea, dónde obtenerlos, su licencia
+      y su uso. Los archivos de datos no se publican \\
     \bd{docs/} & Diseño del modelo dimensional (\bd{modelo_dimensional.md},
       fuente de verdad del diseño), fuentes de información, bitácora,
       diagrama del esquema estrella y capturas del proceso \\
     \bd{informe/} & Fuentes LaTeX de este informe y de la guía de ejecución en
       Windows, con las referencias en \bd{referencias.bib} \\
-    \bd{tests/} & Pruebas automáticas del script del Datawarehouse (pytest) \\
+    \bd{tests/} & Pruebas automáticas del script del Datawarehouse, de la
+      preparación de datos y de la carga (pytest) \\
     \bd{herramientas/} & Captura automatizada de pgAdmin, generación del
-      diccionario de datos (Anexo~A) y armado del paquete de entrega \\
+      diccionario de datos (Anexo~A) y de las estadísticas de procesamiento,
+      exportación del Datawarehouse construido y armado del paquete de
+      entrega \\
     \bd{docker-compose.yml}, \bd{docker/} & Definición de los servicios
       PostgreSQL 17 y pgAdmin 4, con versiones fijas \\
     \bd{requirements.txt}, \bd{.env.example} & Dependencias de Python con
       versiones fijas y plantilla de configuración de la conexión \\
-    \bd{etl/}, \bd{dashboard/}, \bd{data/} & Carpetas reservadas para el
-      proyecto de Apache Hop, el dashboard en Streamlit y los datos de origen,
-      que se desarrollan en los Avances N°2 y N°3 \\
+    \bd{dashboard/} & Carpeta reservada para el dashboard en Streamlit, que
+      se desarrolla en el Avance N°3 \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
 Por seguridad y derechos de autor, el repositorio no incluye las credenciales
 de conexión (archivo \bd{.env}, que cada integrante crea a partir de
-\bd{.env.example}) ni el material del curso entregado por el profesor. Para
+\bd{.env.example}), el material del curso entregado por el profesor, los
+archivos de las fuentes de datos ni el script con el Datawarehouse construido,
+que contiene datos derivados de una fuente sin licencia abierta. Para
 obtener una copia local se usa:
 
 \begin{lstlisting}[style=consola]

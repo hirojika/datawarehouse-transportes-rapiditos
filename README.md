@@ -14,7 +14,7 @@ Los PDF del curso (`referencias/`) no se versionan: se descargan de Canvas.
   - Debian/Ubuntu: `sudo apt install docker.io docker-compose`, luego `sudo usermod -aG docker $USER` y volver a iniciar sesión.
   - Windows: Docker Desktop (con WSL 2).
 - Python 3 y Git
-- Java 17 o superior y Apache Hop (desde la Fase 2, para el ETL)
+- Java 17 o superior y Apache Hop 2.20.0 (para el ETL): descomprimir `apache-hop-client-2.20.0.zip` de https://downloads.apache.org/hop/2.20.0/ en la carpeta personal (queda `~/hop`) o definir la variable `HOP_HOME` con la carpeta de Hop.
 
 ## Puesta en marcha
 
@@ -58,12 +58,31 @@ O desde pgAdmin:
 
 La guía para exportar el diagrama del esquema estrella está en `docs/exportar_diagrama_pgadmin.md`.
 
+## ETL (Avance N°2)
+
+El ETL tiene dos partes: Python prepara los datos (`etl/python/`) y Apache Hop los carga (`etl/hop/`: workflow `principal.hwf` y pipelines `01_staging`, `02_dimensiones` y `03_hechos`). El detalle de cada fuente, su licencia y su uso está en `data/LEEME.md`.
+
+1. **Datos.** Los archivos de las fuentes no se versionan. `python etl/python/descargar_fuentes.py` descarga las que no piden sesión a `data/raw/`. Las de Kaggle y Maven Analytics se descargan a mano, como indica `data/LEEME.md`.
+2. **Carga completa.** Con los contenedores activos y `01_ddl.sql` ya ejecutado:
+
+   ```bash
+   python etl/ejecutar_etl.py --preparar   # prepara data/processed (unos 80 s) y ejecuta el workflow de Hop
+   python etl/ejecutar_etl.py              # solo el workflow de Hop, con data/processed existente (unos 20 s)
+   ```
+
+   Cada ejecución recrea el esquema `stg`, vacía el `dwh` y lo vuelve a poblar. El workflow termina con `sql/04_validar_carga.sql`, que falla si alguna transacción se pierde o si los montos por línea no cuadran. El registro de Hop queda en `data/processed/etl_hop.log`.
+3. **Hop GUI.** `python etl/abrir_hop_gui.py` registra el proyecto `rapiditos` y abre Hop GUI con las credenciales de `.env`.
+4. **Estadísticas de Procesamiento.** `python herramientas/estadisticas_etl.py` genera las tablas del capítulo en `informe/secciones/estadisticas/`.
+5. **DWH construido.** `python herramientas/exportar_dwh.py` genera `data/processed/05_datos_dwh.sql`, con los datos de las 7 tablas, para cargarlos sin Hop después de `01_ddl.sql`. No se versiona, porque contiene datos derivados de Delivery Center.
+
+`sql/98_consultas_carga.sql` tiene consultas de verificación del DWH poblado: filas por tabla, rechazos, conciliación e indicadores.
+
 ## Pruebas y estilo
 
 Con los contenedores activos y el venv activado:
 
 ```bash
-pytest -v        # crea rapiditos_test, ejecuta 01_ddl.sql dos veces y la borra (nunca toca rapiditos)
+pytest -v        # DDL en rapiditos_test (la crea y la borra); la carga se revisa en rapiditos, solo lectura
 ruff check .
 ```
 
@@ -77,6 +96,8 @@ python herramientas/capturar_pgadmin.py
 ```
 
 El script vuelve a ejecutar `01_ddl.sql`. Si alguna tabla de `dwh` ya tiene datos, se detiene sin tocar nada.
+
+Avance N°2: `python herramientas/capturar_pgadmin.py --avance2` genera las capturas 06a–06f con las consultas de `sql/98_consultas_carga.sql` sobre el DWH poblado, sin modificarlo. Las capturas de Hop GUI (07a–07e) las hace el grupo, con las instrucciones de `docs/checklist_capturas.md`.
 
 ## Diccionario de datos del informe
 

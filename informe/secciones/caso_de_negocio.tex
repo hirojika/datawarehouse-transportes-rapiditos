@@ -414,18 +414,23 @@ multidimensional y el script SQL que crea su estructura, sin datos.
         resultados sobre tipos de clientes demuestran el funcionamiento de la
         solución, pero no describen a clientes reales.
   \item \textbf{Fuentes de otros países:} las transacciones provienen de
-        Brasil, el Reino Unido y Estados Unidos, mientras que los clientes
-        residen en Chile. Esto es coherente con una compañía internacional,
-        pero las zonas de origen y destino no son chilenas.
-  \item \textbf{Datos agregados:} ANTT publica totales mensuales de pasajes y
-        DB1B, una muestra trimestral; el detalle por día y por transacción se
-        asigna en el ETL de forma sintética, reproduciendo esos totales.
+        Colombia, Brasil, el Reino Unido y Estados Unidos, mientras que los
+        clientes residen en Chile. Esto es coherente con una compañía
+        internacional, pero las zonas de origen y destino no son chilenas.
+  \item \textbf{Datos agregados y estimados:} la fuente de buses informa
+        pasajeros por despacho, sin precio, y DB1B informa el trimestre del
+        pasaje. Cada pasajero de bus se convierte en una venta, el día se asigna
+        de forma sintética y la tarifa se estima con precios chilenos del
+        SERNAC.
   \item \textbf{Períodos distintos:} las fuentes que no cubren 2023--2025 se
-        trasladan a ese período, conservando su estacionalidad.
+        trasladan a ese período. Los buses de 2024, casi ausentes en la fuente,
+        y el segundo semestre de 2025 de la aerolínea, todavía no publicado, se
+        completan con el mismo período de otro año.
   \item \textbf{Datos ficticios y licencias:} el dataset de trenes es ficticio
-        según su proveedor, y el de Delivery Center no publica su licencia. Si
-        esa licencia no permite su uso, la línea URapid Delivery se generará de
-        forma sintética, sin cambios en el modelo.
-  \item \textbf{Alcance de este avance:} el Datawarehouse se entrega sin datos,
-        por lo que las problemáticas no se cuantifican todavía.
+        según su proveedor, y el de Delivery Center no tiene licencia abierta:
+        se usa solo con fines académicos y sus archivos no se redistribuyen.
+  \item \textbf{Muestra:} el Datawarehouse se puebla con una muestra de 120.000
+        transacciones y 10.000 clientes, suficiente para el análisis del
+        proyecto pero no para representar el volumen real de una compañía de
+        este tamaño.
 \end{itemize}

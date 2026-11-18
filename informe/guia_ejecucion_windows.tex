@@ -37,7 +37,7 @@
 % Enlaces en negro, sin recuadros; siguen siendo pulsables en el PDF
 \hypersetup{colorlinks=true, linkcolor=black, citecolor=black,
             urlcolor=black, filecolor=black,
-            pdftitle={Guía de Ejecución en Windows: Datawarehouse de Transportes Rapiditos S.A.},
+            pdftitle={Guía de Ejecución en Windows: Datawarehouse y ETL de Transportes Rapiditos S.A.},
             pdfauthor={Grupo 1, Inteligencia de Negocios, UTEM}}
 \setlength{\emergencystretch}{2em}
 
@@ -72,9 +72,9 @@
 \begin{center}
   {\Large\bfseries Guía de Ejecución en Windows\par}
   \medskip
-  {\large Script del Datawarehouse de Transportes Rapiditos S.A.\par}
+  {\large Datawarehouse y ETL de Transportes Rapiditos S.A.\par}
   \medskip
-  Inteligencia de Negocios (INFB8101), Sección 412 -- Proyecto Semestral, Avance N°1\par
+  Inteligencia de Negocios (INFB8101), Sección 412 -- Proyecto Semestral, Avances N°1 y N°2\par
   Grupo 1: Ignacio Ahumada Poque, Leonardo Solís Ortiz, Vicente Fuentes
   Rodríguez y Gabriel García Vega\par
   Noviembre de 2026
@@ -83,7 +83,9 @@
 \section{Propósito}
 
 Esta guía permite replicar en Windows la creación del modelo multidimensional
-estrella del Avance N°1 y comprobar el resultado. El script \bd{01_ddl.sql}
+estrella del Avance N°1 y comprobar el resultado. La
+Sección~\ref{sec:avance2} agrega lo del Avance N°2: cargar el Datawarehouse
+construido y, si se desea, ejecutar el ETL con Apache Hop. El script \bd{01_ddl.sql}
 está escrito para \textbf{PostgreSQL 17} (se probó en la versión 17.11) y
 crea, \emph{sin datos}, el esquema \bd{dwh} con la tabla de hechos
 \bd{fact_venta} y sus seis dimensiones.
@@ -289,6 +291,85 @@ opción A), se registra un servidor con host \bd{localhost}, el puerto
 publicado (\bd{5432}), usuario \bd{postgres} y la contraseña elegida en el
 paso B.1. Al terminar, \bd{docker rm -f rapiditos-postgres} elimina el
 contenedor junto con la base.
+
+\section{Avance N°2: Datawarehouse construido y ETL}
+\label{sec:avance2}
+
+\subsection*{C.1. Cargar el Datawarehouse construido}
+
+El script \bd{05_datos_dwh.sql} inserta en el esquema \bd{dwh} los datos que
+produjo el ETL: 118.263 ventas, 10.000 clientes y los 1.096 días de 2023 a
+2025. Es autónomo como los anteriores, y requiere haber ejecutado antes
+\bd{01_ddl.sql} en la misma base (opción A o B).
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{pgAdmin:} en el Query Tool de la base \bd{rapiditos}, abrir
+        \bd{05_datos_dwh.sql} y presionar \textbf{F5} sin seleccionar texto.
+        El archivo pesa unos 15~MB: pgAdmin puede tardar algunos segundos en
+        abrirlo, y la carga, menos de un minuto. Debe terminar con
+        \emph{Query returned successfully}.
+  \item \textbf{psql} (opción A.5):
+\begin{lstlisting}
+& $psql -U postgres -d rapiditos -v ON_ERROR_STOP=1 -f 05_datos_dwh.sql
+\end{lstlisting}
+  \item \textbf{Docker} (opción B):
+\begin{lstlisting}
+docker cp 05_datos_dwh.sql rapiditos-postgres:/tmp/05_datos_dwh.sql
+docker exec rapiditos-postgres psql -U postgres -d rapiditos `
+    -v ON_ERROR_STOP=1 -q -f /tmp/05_datos_dwh.sql
+\end{lstlisting}
+\end{itemize}
+
+Para verificar la carga, ejecutar en el Query Tool las consultas 5 y 6 de
+\bd{98_consultas_carga.sql}: ventas por línea de negocio y año, e indicadores
+por año. Las consultas 1 a 4 de ese archivo revisan el staging del ETL, que
+solo existe si se ejecuta el ETL (paso C.2). El script se puede ejecutar más de
+una vez: vacía las tablas del esquema \bd{dwh} antes de cargarlas.
+
+\subsection*{C.2. Ejecutar el ETL con Apache Hop (opcional)}
+
+El paquete trae el proyecto de integración con la estructura de carpetas que
+necesita Apache Hop: \bd{etl/} (proyecto de Hop, catálogos y scripts de
+Python), \bd{sql/} (scripts que ejecuta el workflow) y \bd{data/processed/}
+(los archivos ya preparados, para no tener que descargar las fuentes).
+
+\begin{enumerate}[leftmargin=*]
+  \item Instalar \textbf{Java 17 o superior} (por ejemplo, Eclipse Temurin,
+        \url{https://adoptium.net}) y \textbf{Python 3.10 o superior}
+        (\url{https://www.python.org}). El ETL no requiere paquetes de Python
+        adicionales.
+  \item Descargar \bd{apache-hop-client-2.20.0.zip} desde
+        \url{https://downloads.apache.org/hop/2.20.0/} y descomprimirlo en la
+        carpeta personal, de modo que quede \lstinline[basicstyle=\ttfamily]|C:\Users\<usuario>\hop|. Si se
+        descomprime en otra carpeta, crear la variable de entorno
+        \bd{HOP_HOME} con esa ruta.
+  \item Tener la base \bd{rapiditos} con \bd{01_ddl.sql} ejecutado (opción A o
+        B).
+  \item En la carpeta del paquete, crear el archivo \bd{.env} con los datos de
+        conexión. Con PowerShell abierto en esa carpeta:
+\begin{lstlisting}
+Copy-Item .env.example .env
+notepad .env
+\end{lstlisting}
+        y ajustar \bd{DB_USER} y \bd{DB_PASSWORD} (en la opción A,
+        \bd{postgres} y su contraseña; en la opción B, \bd{postgres} y la
+        clave del paso B.1). La contraseña no debe contener comas ni los
+        caracteres \bd{&} \bd{|} \bd{<} \bd{>} \bd{^}, que la consola de
+        Windows interpreta.
+  \item Ejecutar el ETL:
+\begin{lstlisting}
+python etl\ejecutar_etl.py
+\end{lstlisting}
+\end{enumerate}
+
+El workflow principal recrea el esquema \bd{stg}, vacía el \bd{dwh}, ejecuta
+los tres pipelines y termina con la validación de consistencia. La salida debe
+terminar con \bd{Workflow duration} y \bd{ETL terminado ... con código 0}; el
+registro completo queda en \lstinline[basicstyle=\ttfamily]|data\processed\etl_hop.log|. Después se pueden
+ejecutar las seis consultas de \bd{98_consultas_carga.sql}, y la consulta 4
+debe mostrar diferencias en cero. Para revisar los pipelines en la interfaz
+gráfica, \lstinline[basicstyle=\ttfamily]|python etl\abrir_hop_gui.py| abre Hop GUI con el proyecto
+\bd{rapiditos} registrado.
 
 \section{Problemas frecuentes}
 

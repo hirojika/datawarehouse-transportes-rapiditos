@@ -2,6 +2,8 @@
 
 **Estado: aprobada por el grupo el 05-11-2026** (decisiones en la sección 4). Está incorporada al informe, en la sección Fuentes de Información (`informe/secciones/fuentes_de_informacion.tex`), adelantada al Avance N°1.
 
+**Actualizada el 17-11-2026 para el Avance N°2** (sección 5): todas las fuentes quedaron verificadas, y la línea de buses cambió de ANTT (Brasil) a Supertransporte (Colombia), porque el portal de ANTT rechaza las descargas.
+
 Cada fuente indica su estado de verificación:
 - **Verificado:** se leyó la página oficial del dataset.
 - **Parcial:** solo se vieron extractos en resultados de búsqueda.
@@ -28,7 +30,7 @@ Cada fuente indica su estado de verificación:
 | Campos vistos | `mes_emissao_bilhete`, `mes_viagem`, `ponto_origem_viagem`, `ponto_destino_viagem`, `tipo_servico`, `tipo_gratuidade`, `quantidade_bilhetes`, `media_valor_total`, `dp_valor_total` |
 | Uso en el modelo | Origen y destino → `dim_zona`; tipo de servicio → `dim_servicio.clase_servicio`; cantidad y valor medio → transacciones; gratuidad → descuento |
 | Advertencia | Por sus columnas, **parece agregado** por mes, origen, destino y tipo de servicio, no un registro por pasaje. Se desagrega en transacciones sintéticas calibradas |
-| Estado | **Parcial.** El portal bloquea el acceso automatizado. Hay que abrir el diccionario de datos en el navegador y confirmar columnas y granularidad |
+| Estado | **Descartada el 17-11-2026.** El portal rechaza las descargas ("Request Rejected"), tanto automatizadas como desde el navegador. Se reemplazó por Supertransporte (Colombia); ver sección 5 |
 
 Complemento chileno: la Encuesta Estructural de Transporte Interurbano de Pasajeros por Carretera (ETRANP) del INE, que es anual y agregada. Sirve para dar contexto en el informe, no para cargar transacciones.
 
@@ -121,3 +123,39 @@ Complemento chileno: las estadísticas mensuales de la Junta de Aeronáutica Civ
 5. **Informe:** la sección Fuentes de Información se adelanta al **Avance N°1**.
 
 Pendiente para la Fase 2: confirmar en el navegador lo que quedó en estado parcial o por verificar (diccionario de ANTT, página de BTS, columnas y licencia de Olist, página original de Delivery Center) y la fuente de los tipos de cambio.
+
+## 5. Revisión del Avance N°2 (17-11-2026)
+
+Todas las fuentes se revisaron de nuevo antes de construir el ETL. El detalle de cada archivo, su licencia y su uso está en `data/LEEME.md`.
+
+### 5.1 Estado final por línea
+
+| Línea | Fuente | Estado | Obtención |
+|---|---|---|---|
+| Buses | **Supertransporte (Colombia)**, "Operación de pasajeros y despacho de vehículos en la modalidad de transporte de pasajeros por carretera", datos.gov.co, dataset `eh75-8ah6`, CC BY-SA 4.0 | Verificado | Script, por la API pública: 2 días por mes (8 y 22), solo despachos en origen |
+| Trenes | UK Train Rides (Maven Analytics), dominio público, ficticio | Verificado: `railway.csv`, 31.653 pasajes y 18 columnas | Manual (cuenta de Maven) |
+| Taxis | NYC TLC, taxis verdes 2023-2025 | Verificado | Script |
+| Logística | Olist (Kaggle), CC BY-NC-SA 4.0 | Verificado: 9 CSV, 99.441 pedidos | Manual (cuenta de Kaggle) |
+| Aerolínea | BTS DB1B Market, 2023 T1 a 2025 T2, más la tabla de aeropuertos `L_AIRPORT` | Verificado: 2025 T3 y T4 aún no se publican | Script |
+| Delivery | Delivery Center (Kaggle), "Data files © Original Authors" (sin licencia abierta) | Verificado: 7 CSV, 368.999 pedidos | Manual (cuenta de Kaggle). Sus archivos no se publican (decisión del grupo) |
+
+**Buses (Supertransporte):** trae pasajeros reales por terminal, municipio de origen y de destino, fecha, hora, clase de vehículo y nivel de servicio (básico o lujo). Limitaciones:
+- No trae precio. La tarifa se estima con un modelo (sección 5.2).
+- 2024 casi no tiene datos: 106 mil filas, frente a 12,3 millones en 2023 y 11,7 millones en 2025. Cada mes de 2024 con menos de la mitad de los pasajeros del mismo mes de 2023 se reemplaza por ese mes de 2023, trasladado un año. Ese traslado es sintético.
+- Trae algunas fechas inválidas (años 2202, 2222 y 6202), que quedan fuera de la extracción.
+
+### 5.2 Fuentes de apoyo aprobadas el 17-11-2026
+
+| Fuente | Para qué | Licencia |
+|---|---|---|
+| INE, Censo 2024, tabla D1 (población por sexo y grupos quinquenales de edad, hoja 4 por comuna) | Distribución de comuna, sexo y edad de los clientes sintéticos | CC BY-SA 4.0 |
+| Banco Central de Chile, cuadros TCB_505 (dólar observado) y TCB_510 (paridades), promedios anuales 2023-2025 | Convertir USD, GBP y BRL a CLP. Dólar: 839,07, 943,58 y 951,64 CLP | Publicación pública |
+| SERNAC, "Costos de viajes nacionales a los destinos más turísticos en vacaciones de invierno" (junio de 2024), tablas 4 y 7 | Precios reales de pasajes de bus (semi cama y salón cama) y km por carretera de 28 rutas chilenas, para ajustar la tarifa de buses `a + b · km` | Publicación pública |
+| DANE, DIVIPOLA (datos.gov.co, `gdxc-w37w`) | Nombre, departamento y coordenadas de los municipios colombianos, para `dim_zona` y la distancia | CC BY-SA 4.0 |
+| GeoNames, archivo de Chile (`CL.zip`) | Coordenadas de las ciudades chilenas del SERNAC, para calcular cuánto más larga es la ruta por carretera que la línea recta (factor que se aplica a Colombia) | CC BY 4.0 |
+
+Resultado del modelo de tarifa con estos datos: básico (semi cama), 6.918 + 18,8 CLP por km; lujo (salón cama), 6.917 + 26,6 CLP por km; factor carretera / línea recta, 1,21 (mediana de las 28 rutas).
+
+### 5.3 Tamaño de la muestra
+
+Unos 10.000 clientes (9.500 personas y 500 empresas) y 120.000 transacciones: 25.000 de buses, 15.000 de trenes, 25.000 de taxis, 20.000 de logística, 15.000 de aerolínea y 20.000 de delivery.

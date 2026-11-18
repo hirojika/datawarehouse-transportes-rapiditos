@@ -1,0 +1,50 @@
+dominio,codigo_linea,valor_fuente,codigo_destino
+servicio,BUS,BASICO,BUS-BAS
+servicio,BUS,LUJO,BUS-LUJ
+servicio,TRN,Standard,TRN-EST
+servicio,TRN,First Class,TRN-PRI
+servicio,TAX,1,TAX-EST
+servicio,TAX,2,TAX-AER
+servicio,TAX,5,TAX-ESP
+servicio,LOG,estandar,LOG-EST
+servicio,AER,corto,AER-COR
+servicio,AER,medio,AER-MED
+servicio,AER,largo,AER-LAR
+servicio,DEL,MOTOBOY|FOOD,DEL-MOT-COM
+servicio,DEL,MOTOBOY|GOOD,DEL-MOT-PRO
+servicio,DEL,BIKER|FOOD,DEL-BIC-COM
+servicio,DEL,BIKER|GOOD,DEL-BIC-PRO
+servicio,DEL,SIN_DATO|FOOD,DEL-NI-COM
+servicio,DEL,SIN_DATO|GOOD,DEL-NI-PRO
+canal_venta,*,convenio,CON
+canal_venta,TRN,Online,WEB
+canal_venta,TRN,Station,BOL
+canal_venta,TAX,1,CLL
+canal_venta,TAX,2,CAL
+canal_venta,LOG,marketplace,MKT
+canal_venta,DEL,OWN CHANNEL,APP
+canal_venta,DEL,MARKETPLACE,MKT
+medio_pago,TRN,Credit Card,CRE
+medio_pago,TRN,Debit Card,DEB
+medio_pago,TRN,Contactless,SCT
+medio_pago,TAX,1,CRE
+medio_pago,TAX,2,EFE
+medio_pago,TAX,3,NI
+medio_pago,TAX,4,NI
+medio_pago,TAX,5,NI
+medio_pago,LOG,credit_card,CRE
+medio_pago,LOG,debit_card,DEB
+medio_pago,LOG,boleto,BOL
+medio_pago,LOG,voucher,VOU
+medio_pago,LOG,not_defined,NI
+medio_pago,DEL,ONLINE,ONL
+medio_pago,DEL,PAYMENT_LINK,ONL
+medio_pago,DEL,DEBIT,DEB
+medio_pago,DEL,DEBIT_STORE,DEB
+medio_pago,DEL,CREDIT,CRE
+medio_pago,DEL,CREDIT_STORE,CRE
+medio_pago,DEL,INSTALLMENT_CREDIT_STORE,CRE
+medio_pago,DEL,MONEY,EFE
+medio_pago,DEL,MEAL_BENEFIT,BEN
+medio_pago,DEL,STORE_DIRECT_PAYMENT,TIE
+medio_pago,DEL,BANK_TRANSFER_DC,TRA

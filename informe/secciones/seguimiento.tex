@@ -1,0 +1,82 @@
+% =============================================================================
+% Seguimiento del Proyecto: estado en cada avance, cambios y próximos pasos.
+% Fuente: docs/bitacora.md.
+% =============================================================================
+\section{Seguimiento del Proyecto}
+\label{sec:seguimiento}
+
+Este capítulo resume el estado del proyecto al cierre del Avance N°2, los
+cambios respecto de lo planteado en el Avance N°1 y el trabajo pendiente. El
+registro detallado de cada decisión, cambio y verificación está en la bitácora
+del proyecto (\bd{docs/bitacora.md}, en el repositorio del Anexo~C).
+
+\subsection{Estado por Avance}
+
+\begin{table}[H]
+  \centering
+  \caption{Estado de los entregables del proyecto}
+  \label{tab:seguimiento}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.3cm}
+                                  >{\raggedright\arraybackslash}p{1.8cm}
+                                  >{\raggedright\arraybackslash}X
+                                  >{\raggedright\arraybackslash}p{2.2cm}@{}}
+    \toprule
+    \textbf{Avance} & \textbf{Fecha} & \textbf{Contenido} & \textbf{Estado} \\
+    \midrule
+    Avance N°1 & 05-11-2026 & Caso de negocio, fuentes de información,
+      arquitectura propuesta, modelo estrella y script de creación sin datos
+      & Entregado \\
+    Avance N°2 & 19-11-2026 & Fuentes descargadas y verificadas; proyecto de
+      integración (Python y Apache Hop); esquema de staging; Datawarehouse
+      poblado y su script; estadísticas de procesamiento; pruebas de la carga
+      & Completado (este informe) \\
+    Avance N°3 & 10-12-2026 & Cubo en Cube con dimensiones, métricas y KPI;
+      dashboard en Streamlit para la gerencia comercial y de marketing;
+      recomendaciones; informe final y presentación & Pendiente \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Cambios Respecto del Avance N°1}
+
+El modelo estrella no cambió: las siete tablas, sus columnas, llaves y reglas
+son las del Avance N°1, y el script \bd{01_ddl.sql} se usa sin modificaciones.
+Los cambios se concentran en las fuentes y en el reparto de tareas del ETL:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Fuente de buses:} el portal de la ANTT (Brasil) rechazó las
+        descargas, por lo que la línea de buses usa los datos de pasajeros de
+        la Superintendencia de Transporte de Colombia. Como esa fuente no trae
+        precio, se agregaron tres fuentes de apoyo para estimar la tarifa y la
+        distancia: el SERNAC, el DANE y GeoNames
+        (Sección~\ref{sec:tratamientos}).
+  \item \textbf{Licencia de Delivery Center:} se encontró la página original
+        del dataset; su licencia no es abierta. El grupo decidió usarlo solo
+        con fines académicos y no publicar sus archivos ni los datos derivados
+        en el repositorio.
+  \item \textbf{Asignación de clientes:} se hace en la preparación en Python, y
+        no en Apache Hop como se planteó en el Avance N°1, porque requiere
+        muestreo ponderado. Hop conserva la conversión de monedas y unidades,
+        la traducción de códigos, las reglas de calidad y la carga.
+  \item \textbf{Taxis:} se usan los taxis verdes de Nueva York, incluidos en la
+        fuente aprobada, en vez de los amarillos: sus archivos pesan unos
+        1,3~MB al mes, frente a 50 a 70~MB, y la muestra es la misma.
+  \item \textbf{Aerolínea:} BTS todavía no publica el segundo semestre de
+        2025, que se completa con 2024 trasladado un año.
+\end{itemize}
+
+\subsection{Próximos Pasos}
+
+Para el Avance N°3 quedan pendientes:
+
+\begin{enumerate}[leftmargin=*]
+  \item Levantar Cube en Docker Compose y definir el cubo con solo las
+        dimensiones y atributos necesarios para el perfil táctico, y las
+        métricas de la Sección~\ref{sec:kpi} (ventas netas, ticket promedio,
+        clientes activos, frecuencia de compra, gasto anual por cliente,
+        participación por línea, clientes multilínea y tasa de descuento).
+  \item Construir el dashboard en Streamlit y Plotly, que responda las
+        preguntas de negocio de la Sección~\ref{sec:preguntas}.
+  \item Redactar las recomendaciones de negocio y la presentación.
+\end{enumerate}

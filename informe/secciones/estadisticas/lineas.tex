@@ -1,0 +1,22 @@
+% Generado por herramientas/estadisticas_etl.py. No editar a mano.
+\begin{table}[H]
+  \centering
+  \caption{Registros procesados por línea de negocio}
+  \label{tab:est_lineas}
+  \small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}Xrrrrr@{}}
+    \toprule
+    \textbf{Línea} & \textbf{Fuente} & \textbf{Leídos} & \textbf{Staging} & \textbf{Rechazados} & \textbf{Cargados} & \textbf{\% carga} \\
+    \midrule
+    Buses InterUrbanos & Supertransporte & 1.260.343 & 25.000 & 0 & 25.000 & 100,0 \% \\
+    Trenes & UK Train Rides & 31.653 & 15.000 & 0 & 15.000 & 100,0 \% \\
+    Radio Taxis & NYC TLC & 2.038.653 & 25.000 & 273 & 24.727 & 98,9 \% \\
+    Logística y Distribución & Olist & 99.441 & 20.000 & 199 & 19.801 & 99,0 \% \\
+    Aerolíneas & BTS DB1B & 77.949.326 & 15.000 & 303 & 14.697 & 98,0 \% \\
+    URapid Delivery & Delivery Center & 368.999 & 20.000 & 962 & 19.038 & 95,2 \% \\
+    \midrule
+    \textbf{Total} &  & \textbf{81.748.415} & \textbf{120.000} & \textbf{1.737} & \textbf{118.263} & \textbf{98,6 \%} \\
+    \bottomrule
+  \end{tabularx}
+  \par\smallskip\footnotesize Leídos: filas de la fuente leídas por la preparación en Python. Staging: muestra cargada en stg.transaccion. Cargados: filas de fact\_venta. El porcentaje de carga se calcula sobre staging.
+\end{table}

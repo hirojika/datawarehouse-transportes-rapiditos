@@ -1,0 +1,11 @@
+codigo_medio_pago,nombre_medio_pago
+EFE,efectivo
+DEB,débito
+CRE,crédito
+TRA,transferencia
+SCT,pago sin contacto
+ONL,pago en línea
+VOU,voucher o cupón
+BOL,boleto bancario
+BEN,beneficio de alimentación
+TIE,pago directo en tienda

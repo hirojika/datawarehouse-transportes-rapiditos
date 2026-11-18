@@ -1,0 +1,153 @@
+% =============================================================================
+% Capítulo 4: Estadísticas de Procesamiento (nombre literal del enunciado)
+% Avance N°2. Las tablas las genera herramientas/estadisticas_etl.py desde el
+% registro de Apache Hop y la base, después de la ejecución final del ETL.
+% =============================================================================
+\section{Estadísticas de Procesamiento}
+\label{sec:estadisticas}
+
+Este capítulo presenta los resultados del proceso ETL que puebla el
+Datawarehouse: cuántos registros se leyeron de cada fuente, cuántos llegaron
+al staging, cuántos se rechazaron y por qué, cuántos se cargaron en el modelo
+estrella y cuánto tardó cada etapa. Las cifras corresponden a la ejecución
+final del ETL, hecha con el comando \bd{python etl/ejecutar_etl.py
+--preparar} sobre PostgreSQL 17.11 y Apache Hop 2.20.0. Las tablas de este
+capítulo no se escriben a mano: las genera el script
+\bd{herramientas/estadisticas_etl.py} desde el registro de ejecución de Hop y
+desde la propia base.
+
+\subsection{Ejecución del Proceso}
+
+El ETL se ejecuta con un solo comando, que corre la preparación en Python y
+luego el workflow principal de Apache Hop
+(Sección~\ref{sec:flujo_etl}). La Figura~\ref{fig:hop_metricas} muestra las
+métricas de una ejecución en Apache Hop GUI: filas leídas, escritas y con
+error de cada transformación del pipeline de hechos. La
+Figura~\ref{fig:etl_terminal} muestra el final de la ejecución por línea de
+comandos, con el resultado de cada etapa del workflow.
+
+\captura{07d_hop_metricas_ejecucion.png}{Métricas de ejecución del pipeline \bd{03_hechos} en Apache Hop GUI\label{fig:hop_metricas}}
+\captura{07e_terminal_ejecucion_etl.png}{Ejecución del ETL completo por línea de comandos (\bd{python etl/ejecutar_etl.py})\label{fig:etl_terminal}}
+
+\subsection{Registros por Etapa y Línea de Negocio}
+
+La Tabla~\ref{tab:est_lineas} resume el recorrido de los registros. De las
+fuentes se leyeron más de 80 millones de filas, casi todas de la encuesta de
+pasajes aéreos de BTS, que se lee completa para muestrear sus diez trimestres.
+De ellas se preparó una muestra de 120.000 transacciones, que pasó al staging
+sin pérdidas. El 98,6~\% se cargó en \bd{fact_venta} y el resto se rechazó
+por no cumplir alguna regla de calidad.
+
+\input{secciones/estadisticas/lineas}
+
+Buses y trenes no tienen rechazos. En buses, la preparación ya descarta lo que
+no es una venta: despachos sin pasajeros, vehículos que no son buses (como
+automóviles o camionetas) y rutas con municipios inexistentes. En trenes, el
+dataset es ficticio y no trae registros inválidos. Delivery tiene la tasa de
+carga más baja (95,2~\%), porque el 4,7~\% de sus pedidos aparece cancelado
+en la fuente.
+
+\subsection{Rechazos y Calidad de Datos}
+
+Cada transacción pasa por las reglas de calidad de la vista
+\bd{stg.v_transaccion_conformada} (Figura~\ref{fig:vista_reglas}). La primera
+regla que no se cumple queda como motivo de rechazo, y la transacción se
+registra en \bd{stg.rechazo} en vez de cargarse. La
+Tabla~\ref{tab:est_rechazos} muestra los motivos encontrados.
+
+\input{secciones/estadisticas/rechazos}
+
+Los rechazos corresponden a problemas reales de las fuentes:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Estado en la fuente:} pedidos cancelados (delivery y
+        logística), viajes de taxi sin cobro o con el pago en disputa, y
+        pasajes aéreos de tarifa masiva. No son ventas.
+  \item \textbf{Cantidad fuera de 1 a 9:} registros de BTS que agrupan a
+        decenas de pasajeros en un mismo itinerario, propios de vuelos chárter
+        o grupos, que distorsionarían el ticket promedio.
+  \item \textbf{Monto bruto no positivo:} pasajes aéreos con tarifa 0, envíos
+        sin flete y viajes de taxi con monto cero o negativo.
+  \item \textbf{Duración negativa, distancia o monto atípicos:} viajes de taxi
+        que terminan antes de empezar, recorridos de cientos de kilómetros
+        dentro de Nueva York, entregas de delivery a más de 50 km o pedidos de
+        más de un millón de pesos.
+\end{itemize}
+
+Ninguna transacción se rechazó por un código sin equivalencia, un cliente
+inexistente o una moneda sin tipo de cambio: los catálogos de
+\bd{etl/referencias/} cubren todos los valores de las fuentes.
+
+\subsection{Detalle por Transformación}
+
+La Tabla~\ref{tab:est_hop} reproduce las filas que informó Apache Hop para cada
+transformación de los tres pipelines. En el pipeline de hechos se ve el
+reparto del filtro de calidad: las filas que no cumplen las reglas van a
+\bd{Registrar rechazo}, y las demás pasan por las seis búsquedas de llaves
+sustitutas hasta \bd{Cargar fact_venta}. Ninguna transformación registró
+errores.
+
+\input{secciones/estadisticas/hop}
+
+\subsection{Tiempos de Ejecución}
+
+La Tabla~\ref{tab:est_tiempos} muestra la duración de cada etapa. La
+preparación en Python está dominada por la lectura de los archivos de BTS
+(cerca de 78 millones de filas). El workflow de Hop completo, desde la creación
+del staging hasta la validación final, tarda menos de 20 segundos.
+
+\input{secciones/estadisticas/tiempos}
+
+\subsection{Resultado de la Carga}
+
+La Tabla~\ref{tab:est_tablas} muestra las filas de cada tabla al terminar la
+carga, y las figuras siguientes, las consultas de verificación de
+\bd{sql/98_consultas_carga.sql} ejecutadas en pgAdmin.
+
+\input{secciones/estadisticas/tablas}
+
+La consistencia de la carga se comprobó de tres formas:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Validación dentro del ETL:} la última acción del workflow
+        (\bd{sql/04_validar_carga.sql}) comprueba que cada transacción del
+        staging terminó en \bd{fact_venta} o en \bd{stg.rechazo}, y que por
+        cada línea la cantidad y el monto neto de las transacciones válidas
+        del staging son iguales a los de \bd{fact_venta}. Si algo no cuadra,
+        el ETL termina con error.
+  \item \textbf{Conciliación en pgAdmin:} la Figura~\ref{fig:carga_conciliacion}
+        muestra las diferencias de filas y de monto neto entre el staging y
+        \bd{fact_venta} por línea de negocio: todas son cero.
+  \item \textbf{Pruebas automáticas:} las 10 pruebas de
+        \bd{tests/test_carga.py} verifican, entre otras cosas, que
+        \bd{dim_tiempo} tiene los 1.096 días de 2023 a 2025 sin huecos, que la
+        edad de cada venta coincide con la fecha de nacimiento del cliente, que
+        ninguna venta es anterior a la fecha de registro de su cliente y que
+        todos los clientes están marcados como sintéticos. Con las 29 pruebas
+        del DDL y las 4 de la preparación, se aprobaron 43 de 43.
+\end{enumerate}
+
+\captura{06a_carga_filas_por_tabla.png}{Filas por tabla después de la carga (consulta 1 de \bd{sql/98_consultas_carga.sql})\label{fig:carga_filas}}
+\captura{06b_carga_por_linea.png}{Transacciones en staging, rechazadas y cargadas por línea (consulta 2)\label{fig:carga_lineas}}
+\captura{06c_carga_rechazos.png}{Transacciones rechazadas por motivo (consulta 3)\label{fig:carga_rechazos}}
+\captura{06d_carga_conciliacion.png}{Conciliación por línea entre el staging y \bd{fact_venta}: diferencias en cero (consulta 4)\label{fig:carga_conciliacion}}
+
+\subsection{Primera Lectura de los Datos Cargados}
+
+Con el Datawarehouse poblado, las consultas 5 y 6 de
+\bd{sql/98_consultas_carga.sql} entregan un adelanto de los indicadores que el
+cubo y el dashboard desarrollarán en el Avance N°3
+(Figuras~\ref{fig:carga_ventas} y~\ref{fig:carga_indicadores}). Las ventas por
+línea y año permiten comparar el aporte de cada línea, y los indicadores por
+año calculan los KPI definidos en el modelo: clientes activos, frecuencia de
+compra, gasto anual por cliente, tasa de descuento y clientes multilínea.
+
+Estas cifras deben leerse con las limitaciones de la
+Sección~\ref{sec:limitaciones}: los montos provienen de fuentes de distintos
+países convertidas a pesos chilenos, y el comportamiento de los clientes entre
+líneas proviene del generador de clientes sintéticos. Por ejemplo, la
+proporción de clientes multilínea depende de los supuestos de afinidad del
+generador, no de clientes reales.
+
+\captura{06e_carga_ventas_linea_anio.png}{Ventas por línea de negocio y año (consulta 5)\label{fig:carga_ventas}}
+\captura{06f_carga_indicadores_anio.png}{Indicadores por año: clientes activos, frecuencia, gasto, descuento y clientes multilínea (consulta 6)\label{fig:carga_indicadores}}

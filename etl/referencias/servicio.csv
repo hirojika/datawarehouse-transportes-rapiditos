@@ -1,0 +1,18 @@
+codigo_servicio,linea_negocio,medio_transporte,tipo_servicio,clase_servicio
+BUS-BAS,Buses InterUrbanos Rapiditos,bus,pasajeros,básico
+BUS-LUJ,Buses InterUrbanos Rapiditos,bus,pasajeros,lujo
+TRN-EST,Trenes Rapiditos,tren,pasajeros,estándar
+TRN-PRI,Trenes Rapiditos,tren,pasajeros,primera clase
+TAX-EST,Radio Taxis Rapiditos,taxi,pasajeros,estándar
+TAX-AER,Radio Taxis Rapiditos,taxi,pasajeros,aeropuerto
+TAX-ESP,Radio Taxis Rapiditos,taxi,pasajeros,tarifa especial
+LOG-EST,Logística y Distribución Rapiditos,camión,carga,estándar
+AER-COR,Aerolíneas Rapiditos,avión,pasajeros,corto alcance
+AER-MED,Aerolíneas Rapiditos,avión,pasajeros,medio alcance
+AER-LAR,Aerolíneas Rapiditos,avión,pasajeros,largo alcance
+DEL-MOT-COM,URapid Delivery,moto,carga,comida
+DEL-MOT-PRO,URapid Delivery,moto,carga,productos
+DEL-BIC-COM,URapid Delivery,bicicleta,carga,comida
+DEL-BIC-PRO,URapid Delivery,bicicleta,carga,productos
+DEL-NI-COM,URapid Delivery,no informado,carga,comida
+DEL-NI-PRO,URapid Delivery,no informado,carga,productos

@@ -1,0 +1,29 @@
+origen,destino,km_ida_vuelta,semi_cama_ida_vuelta,salon_cama_ida_vuelta
+La Serena,Calama,2128,53750,68267
+La Serena,Antofagasta,1732,48500,64933
+Santiago,Arica,4070,87500,119125
+Santiago,Iquique,3514,66800,99267
+Santiago,Antofagasta,2670,61600,79600
+Santiago,Valdivia,1706,46550,64800
+Santiago,Copiapó,1612,44000,60700
+Santiago,Calama,3066,75233,89358
+Santiago,Puerto Montt,2066,68000,79267
+Santiago,Temuco,1358,38850,52092
+Santiago,Concepción,1002,33350,41690
+Santiago,La Serena,942,24600,29113
+Santiago,Valparaíso,240,9800,
+Santiago,Rancagua,172,7133,15050
+Antofagasta,Santiago,2672,59867,79033
+Antofagasta,Iquique,832,30700,42600
+Antofagasta,San Pedro de Atacama,624,56700,
+Antofagasta,Calama,436,13467,18437
+Puerto Montt,Santiago,2064,53350,66650
+Puerto Montt,Pucón,678,,33200
+Puerto Montt,Valdivia,444,17500,21735
+Puerto Montt,Castro,348,,20267
+Concepción,La Serena,1936,66000,96000
+Concepción,Puerto Montt,1294,40900,47990
+Concepción,Santiago,1000,25675,37806
+Concepción,Valdivia,936,32400,49500
+Concepción,Pucón,798,,26013
+Concepción,Temuco,584,20200,22300
