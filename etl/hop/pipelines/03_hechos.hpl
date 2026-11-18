@@ -19,11 +19,14 @@
   </info>
   <notepads>
     <notepad>
-      <note>Etapas 4 y 6: la vista stg.v_transaccion_conformada convierte a CLP, km y kg y calcula el motivo de rechazo. Las filas válidas buscan sus llaves sustitutas y se cargan en fact_venta; el resto queda en stg.rechazo. Ambas tablas se vacían al inicio, así que el pipeline se puede repetir solo.</note>
+      <note>Etapas 4 y 6: la vista stg.v_transaccion_conformada convierte a CLP, km y kg
+y calcula el motivo de rechazo. Las filas válidas buscan sus llaves sustitutas
+y se cargan en fact_venta; el resto queda en stg.rechazo. Ambas tablas se vacían
+al inicio, así que el pipeline se puede repetir solo.</note>
       <xloc>112</xloc>
       <yloc>16</yloc>
-      <width>760</width>
-      <heigth>40</heigth>
+      <width>560</width>
+      <heigth>76</heigth>
       <fontname>Noto Sans</fontname>
       <fontsize>10</fontsize>
       <fontbold>N</fontbold>
@@ -108,7 +111,7 @@ ORDER BY numero_transaccion</sql>
     <attributes/>
     <GUI>
       <xloc>112</xloc>
-      <yloc>176</yloc>
+      <yloc>208</yloc>
     </GUI>
   </transform>
   <transform>
@@ -135,7 +138,7 @@ ORDER BY numero_transaccion</sql>
     <attributes/>
     <GUI>
       <xloc>336</xloc>
-      <yloc>176</yloc>
+      <yloc>208</yloc>
     </GUI>
   </transform>
   <transform>
@@ -180,7 +183,7 @@ ORDER BY numero_transaccion</sql>
     <attributes/>
     <GUI>
       <xloc>336</xloc>
-      <yloc>336</yloc>
+      <yloc>368</yloc>
     </GUI>
   </transform>
   <transform>
@@ -218,7 +221,7 @@ ORDER BY numero_transaccion</sql>
     <attributes/>
     <GUI>
       <xloc>560</xloc>
-      <yloc>176</yloc>
+      <yloc>208</yloc>
     </GUI>
   </transform>
   <transform>
@@ -255,8 +258,8 @@ ORDER BY numero_transaccion</sql>
     </lookup>
     <attributes/>
     <GUI>
-      <xloc>752</xloc>
-      <yloc>176</yloc>
+      <xloc>784</xloc>
+      <yloc>208</yloc>
     </GUI>
   </transform>
   <transform>
@@ -293,8 +296,8 @@ ORDER BY numero_transaccion</sql>
     </lookup>
     <attributes/>
     <GUI>
-      <xloc>944</xloc>
-      <yloc>176</yloc>
+      <xloc>1008</xloc>
+      <yloc>208</yloc>
     </GUI>
   </transform>
   <transform>
@@ -331,8 +334,8 @@ ORDER BY numero_transaccion</sql>
     </lookup>
     <attributes/>
     <GUI>
-      <xloc>560</xloc>
-      <yloc>336</yloc>
+      <xloc>1008</xloc>
+      <yloc>368</yloc>
     </GUI>
   </transform>
   <transform>
@@ -369,8 +372,8 @@ ORDER BY numero_transaccion</sql>
     </lookup>
     <attributes/>
     <GUI>
-      <xloc>752</xloc>
-      <yloc>336</yloc>
+      <xloc>784</xloc>
+      <yloc>368</yloc>
     </GUI>
   </transform>
   <transform>
@@ -407,8 +410,8 @@ ORDER BY numero_transaccion</sql>
     </lookup>
     <attributes/>
     <GUI>
-      <xloc>944</xloc>
-      <yloc>336</yloc>
+      <xloc>560</xloc>
+      <yloc>368</yloc>
     </GUI>
   </transform>
   <transform>
@@ -505,7 +508,7 @@ ORDER BY numero_transaccion</sql>
     <attributes/>
     <GUI>
       <xloc>560</xloc>
-      <yloc>496</yloc>
+      <yloc>528</yloc>
     </GUI>
   </transform>
   <transform_error_handling>

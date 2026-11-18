@@ -230,10 +230,11 @@
   </hops>
   <notepads>
     <notepad>
-      <note>Carga completa y repetible: cada ejecución recrea stg, vacía el dwh y lo vuelve a poblar. Si una etapa falla, el workflow se detiene.</note>
+      <note>Carga completa y repetible: cada ejecución recrea stg, vacía el dwh
+y lo vuelve a poblar. Si una etapa falla, el workflow se detiene.</note>
       <xloc>224</xloc>
       <yloc>48</yloc>
-      <width>620</width>
+      <width>520</width>
       <heigth>40</heigth>
       <fontname>Noto Sans</fontname>
       <fontsize>10</fontsize>

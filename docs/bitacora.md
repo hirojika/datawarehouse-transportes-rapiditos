@@ -704,3 +704,13 @@ Verificación:
 **Cambio:** en Linux con `WAYLAND_DISPLAY`, `abrir_hop_gui.py` lanza Hop con `GDK_BACKEND=wayland` y `XDG_SESSION_TYPE=x11`. La segunda variable solo sirve para que el lanzador no vuelva a forzar X11. Queda marcado en el código para revisarlo al actualizar Hop.
 
 Verificación: Hop GUI sigue abierto pasados los 30 s y carga los proyectos. Los `Gtk-WARNING` de tamaños negativos que muestra la consola son cosméticos.
+
+### 17-11-2026: diagramas de Hop más legibles
+
+En la captura de prueba de `03_hechos` en Hop GUI, las flechas entre las búsquedas de llaves volvían en diagonal y cruzaban los nombres, y la nota se cortaba en el borde de la ventana.
+
+Cambios:
+- Las 6 búsquedas quedan en forma de serpiente: la primera fila de izquierda a derecha y la segunda de derecha a izquierda, con `Cargar fact_venta` debajo. No se cruza ninguna flecha.
+- Las notas de los 3 pipelines y del workflow se partieron en líneas cortas.
+
+Verificación: el ETL completo terminó con código 0.

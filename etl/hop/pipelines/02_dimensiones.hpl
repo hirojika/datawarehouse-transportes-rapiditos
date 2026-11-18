@@ -19,10 +19,11 @@
   </info>
   <notepads>
     <notepad>
-      <note>Etapa 5: carga de dimensiones. dim_tiempo y los registros No informado (llave 0) los crea 03_preparar_carga.sql.</note>
+      <note>Etapa 5: carga de dimensiones. dim_tiempo y los registros
+No informado (llave 0) los crea 03_preparar_carga.sql.</note>
       <xloc>112</xloc>
       <yloc>16</yloc>
-      <width>560</width>
+      <width>440</width>
       <heigth>40</heigth>
       <fontname>Noto Sans</fontname>
       <fontsize>10</fontsize>
