@@ -3,7 +3,7 @@
 Fuente de verdad del diseño. Cualquier cambio al modelo se hace primero aquí y después en `sql/`.
 Estado: **aprobado para el Avance N°1** (02-11-2026). Cambio respecto de la propuesta original: la tabla de hechos se renombró de `fact_ventas` a `fact_venta` para cumplir la regla de nombres en singular.
 
-Migración a PostgreSQL 17 (04-11-2026): el proceso de negocio, el grano, las dimensiones y las medidas no cambian. Cambian los tipos de datos, que PostgreSQL no tiene sin signo, y se agregan restricciones `CHECK`, índices y nombres para las PK. El detalle está en la sección 8 y en `docs/bitacora.md`.
+Migración a PostgreSQL 17 (04-11-2026): el proceso de negocio, el grano, las dimensiones y las medidas no cambian. Cambian los tipos de datos, que PostgreSQL no tiene sin signo, y se agregan restricciones `CHECK`, índices y nombres para las PK. El detalle está en la sección 8.
 
 ## 1. Proceso de negocio
 

@@ -6,8 +6,6 @@ Repositorio: https://github.com/hirojika/datawarehouse-transportes-rapiditos
 
 Arquitectura de solución BI para la vista única del cliente de una empresa de transportes con seis líneas de negocio: Datawarehouse estrella en PostgreSQL 17, ETL con Apache Hop, cubo en Cube y dashboard en Streamlit.
 
-Los PDF del curso (`referencias/`) no se versionan: se descargan de Canvas.
-
 ## Requisitos
 
 - Docker y Docker Compose
@@ -56,8 +54,6 @@ O desde pgAdmin:
 
 `01_ddl.sql` se puede ejecutar las veces que se quiera: recrea el esquema `dwh` dentro de una transacción. La primera vez muestra el aviso `schema "dwh" does not exist, skipping`, que es normal.
 
-La guía para exportar el diagrama del esquema estrella está en `docs/exportar_diagrama_pgadmin.md`.
-
 ## ETL (Avance N°2)
 
 El ETL tiene dos partes: Python prepara los datos (`etl/python/`) y Apache Hop los carga (`etl/hop/`: workflow `principal.hwf` y pipelines `01_staging`, `02_dimensiones` y `03_hechos`). El detalle de cada fuente, su licencia y su uso está en `data/LEEME.md`.
@@ -76,13 +72,12 @@ El ETL tiene dos partes: Python prepara los datos (`etl/python/`) y Apache Hop l
 
 `sql/98_consultas_carga.sql` tiene consultas de verificación del DWH poblado: filas por tabla, rechazos, conciliación e indicadores.
 
-## Pruebas y estilo
+## Pruebas
 
 Con los contenedores activos y el venv activado:
 
 ```bash
 pytest -v        # DDL en rapiditos_test (la crea y la borra); la carga se revisa en rapiditos, solo lectura
-ruff check .
 ```
 
 ## Informe y dashboard
@@ -91,15 +86,12 @@ Informe (LaTeX), desde la carpeta `informe/`: `latexmk informe.tex`. `informe/.l
 
 `informe/guia_ejecucion_windows.pdf` (fuente `.tex` en la misma carpeta, se compila igual) es la guía para que el profesor ejecute el script en Windows: PostgreSQL y pgAdmin instalados directamente, `psql` o Docker Desktop.
 
-En VS Code o VSCodium con LaTeX Workshop, `.vscode/settings.json` deja lista la receta "Informe (latexmk, LuaLaTeX y BibTeX)", que compila al guardar.
-
 Dashboard: `streamlit run dashboard/app.py` → `http://localhost:8501`.
 
 ## Documentación
 
 - `docs/modelo_dimensional.md`: fuente de verdad del diseño.
-- `docs/bitacora.md`: registro de decisiones, cambios y verificaciones.
-- `docs/checklist_capturas.md`: capturas para el informe.
+- `docs/fuentes_de_informacion.md`: fuentes de datos de cada línea de negocio.
 
 ## Reglas del grupo
 
@@ -108,4 +100,3 @@ Dashboard: `streamlit run dashboard/app.py` → `http://localhost:8501`.
 - Nada de rutas absolutas.
 - Antes de subir un script SQL, probarlo en una base limpia (`pytest` lo hace).
 - Commits con mensajes descriptivos en español.
-- Registrar decisiones y cambios en `docs/bitacora.md`.

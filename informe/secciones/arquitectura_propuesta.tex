@@ -1,7 +1,7 @@
 % =============================================================================
 % Capítulo 3: Arquitectura Propuesta (nombre literal del enunciado)
 % Las versiones de la Tabla de herramientas se verificaron en el equipo de
-% desarrollo el 05-11-2026 (ver docs/bitacora.md).
+% desarrollo el 05-11-2026.
 % =============================================================================
 \section{Arquitectura Propuesta}
 \label{sec:arquitectura}
@@ -150,7 +150,7 @@ versiones son las instaladas en el equipo de desarrollo y quedan fijadas en
     Explotación & Cube (Cube Core)~\cite{cube} & 1.8.19 & Cubo semántico: dimensiones y métricas definidas en YAML \\
                 & Streamlit~\cite{streamlit} y Plotly & 1.66.1 y 7.1.0 & Dashboard de visualización web \\
     \midrule
-    Calidad y documentación & pytest y ruff & 9.2.0 y 0.17.3 & Pruebas automáticas y revisión de estilo del código \\
+    Calidad y documentación & pytest & 9.2.0 & Pruebas automáticas del Datawarehouse y del ETL \\
                 & Git y GitHub & --- & Control de versiones del proyecto \\
                 & LaTeX (LuaLaTeX) & TeX Live 2026 & Redacción de este informe \\
     \bottomrule
@@ -262,6 +262,5 @@ levanta el mismo entorno con un solo comando, en Linux o en Windows (Anexo~B,
 Sección~\ref{sec:anexo_entorno}).
 
 El código del proyecto se versiona con Git en un repositorio público de
-GitHub (Anexo~C, Sección~\ref{sec:anexo_repositorio}). Los scripts de Python
-se revisan con ruff y el Datawarehouse se valida con pruebas automáticas en
-pytest (Sección~\ref{sec:verificacion}).
+GitHub (Anexo~C, Sección~\ref{sec:anexo_repositorio}). El Datawarehouse se
+valida con pruebas automáticas en pytest (Sección~\ref{sec:verificacion}).

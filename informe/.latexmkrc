@@ -1,5 +1,5 @@
 # Configuración de latexmk para el informe. La leen `latexmk informe.tex`
-# (desde la carpeta informe/) y la receta de LaTeX Workshop de .vscode/.
+# (desde la carpeta informe/).
 #
 # - LuaLaTeX por omisión ($pdf_mode = 4). `latexmk -pdf` sigue usando pdfLaTeX.
 # - latexmk ejecuta BibTeX con referencias.bib y repite las pasadas hasta que
