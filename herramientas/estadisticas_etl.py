@@ -49,7 +49,7 @@ def n(valor) -> str:
 
 def tabla(caption, label, columnas, encabezado, filas, nota=None) -> str:
     lineas = [
-        "\\begin{table}[H]",
+        "\\begin{table}[!htbp]",
         "  \\centering",
         f"  \\caption{{{caption}}}",
         f"  \\label{{{label}}}",

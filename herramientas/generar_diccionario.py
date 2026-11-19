@@ -101,7 +101,7 @@ def tabla_latex(conexion: psycopg.Connection, tabla: str) -> str:
         "",
         f"{escapar(comentario or '')}. \\textbf{{Origen:}} {ORIGEN[tabla]}",
         "",
-        "\\begin{table}[H]",
+        "\\begin{table}[!htbp]",
         "  \\centering",
         f"  \\caption{{Diccionario de datos de \\bd{{{tabla}}}}}",
         "  \\small",

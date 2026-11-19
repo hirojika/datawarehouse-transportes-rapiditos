@@ -15,7 +15,7 @@ Datawarehouse construido (Sección~\ref{sec:scripts_avance2}).
 
 \subsection{Scripts Entregados}
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Scripts del Datawarehouse y de apoyo}
   \label{tab:scripts}
@@ -82,7 +82,7 @@ pgAdmin. Su estructura es la siguiente:
 La Figura~\ref{fig:ddl_fact} muestra la creación de la tabla de hechos. El
 script completo se entrega en el repositorio del proyecto.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
   \caption{Fragmento de \bd{sql/01_ddl.sql}: creación de la tabla de hechos \bd{fact_venta}}
   \label{fig:ddl_fact}
@@ -136,7 +136,7 @@ El resultado del script se verificó de tres formas: con las consultas de
 comprobar que es idempotente. La Tabla~\ref{tab:verificacion} resume los
 elementos del esquema \bd{dwh} consultados en el catálogo de PostgreSQL.
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Elementos del esquema \bd{dwh} verificados en el catálogo}
   \label{tab:verificacion}
@@ -194,7 +194,7 @@ para que funcionen igual en \bd{psql} y en pgAdmin. Los scripts 02 a 04 los
 ejecuta el workflow principal de Apache Hop
 (Sección~\ref{sec:flujo_etl}).
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Scripts agregados en el Avance N°2}
   \label{tab:scripts_avance2}
@@ -235,7 +235,7 @@ La Figura~\ref{fig:vista_reglas} muestra las reglas de calidad de la vista
 de hechos la registra en \bd{stg.rechazo} con su motivo. Los umbrales de
 «distancia atípica» y «monto atípico» son reglas de negocio del proyecto.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
   \caption{Fragmento de \bd{sql/02_stg.sql}: reglas de calidad de la vista conformada}
   \label{fig:vista_reglas}

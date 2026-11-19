@@ -42,7 +42,7 @@ año, zona o línea) y conserva todas las variables de comportamiento del
 objetivo. Antes de elegirlo se evaluaron las tres alternativas de la
 Tabla~\ref{tab:alternativas}.
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Alternativas de modelo evaluadas}
   \label{tab:alternativas}
@@ -84,7 +84,7 @@ La tabla \bd{fact_venta} registra cada transacción de compra. Contiene:
   \item \textbf{Ocho medidas}, descritas en la Tabla~\ref{tab:medidas}.
 \end{itemize}
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Medidas de \bd{fact_venta}}
   \label{tab:medidas}
@@ -166,7 +166,7 @@ Las dimensiones tienen las jerarquías de la Tabla~\ref{tab:jerarquias}, que
 permiten al usuario agregar los datos o desglosarlos desde el nivel más
 general al más detallado en el cubo y el dashboard.
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Jerarquías de las dimensiones}
   \label{tab:jerarquias}
@@ -197,7 +197,7 @@ Tabla~\ref{tab:kpi}, que responden las preguntas de negocio de la
 Sección~\ref{sec:preguntas}. Se definirán como métricas del cubo en el Avance
 N°3. El rango etario se calcula a partir de \bd{edad_cliente} en el cubo.
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Cálculos y KPI derivados de las medidas}
   \label{tab:kpi}
@@ -228,7 +228,7 @@ Todo el modelo sigue la norma de la Tabla~\ref{tab:nomenclatura}. La consulta
 de control del script \bd{sql/99_validacion.sql} verifica que ninguna
 restricción ni índice quede fuera de ella (Sección~\ref{sec:verificacion}).
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Norma de nomenclatura del modelo}
   \label{tab:nomenclatura}

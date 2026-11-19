@@ -732,3 +732,8 @@ Verificación: el ETL completo terminó con código 0.
 - Se volvió a correr `python etl/ejecutar_etl.py` y se guardó su salida completa. Terminó en 18 s con código 0. El workflow tardó 15,0 s en total: 3,1 s el staging, 0,3 s las dimensiones y 10,6 s los hechos.
 - Con esa ejecución se regeneraron la captura 07e y las tablas de Estadísticas de Procesamiento (`herramientas/estadisticas_etl.py`). Así, los tiempos de la Tabla de tiempos coinciden con los que muestra la captura. Las cantidades de filas no cambiaron.
 - Se recompiló el informe y se rearmó el paquete de entrega (12,7 MB, 36 archivos).
+
+### 18-11-2026: el informe ya no deja páginas a medio llenar, y el Anexo C reconoce el aporte del grupo
+
+- Las tablas y figuras estaban fijas en su lugar con `[H]`. Cuando una tabla grande no cabía, saltaba a la página siguiente y dejaba media página en blanco, por ejemplo en el detalle por transformación de Hop y en la tabla de tiempos. Ahora se ubican con `[!htbp]`, se ajustaron los parámetros de flotantes en `informe.tex` y las páginas que solo tienen tablas o figuras se alinean arriba. Las herramientas `estadisticas_etl.py` y `generar_diccionario.py` generan las tablas con el mismo criterio. Con estos cambios el informe bajó de 75 a 66 páginas y quedó sin huecos a mitad de capítulo.
+- El Anexo C ahora aclara que el repositorio es trabajo de todo el grupo: los demás integrantes enviaron fuentes, información y mejoras al administrador del repositorio, que las incorporó, aunque los commits aparezcan solo a su nombre.

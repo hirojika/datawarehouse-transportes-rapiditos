@@ -44,7 +44,7 @@ Rejected»), tanto las automatizadas como las hechas desde el navegador. Se
 reemplazó por los datos de pasajeros de la Superintendencia de Transporte de
 Colombia.
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Fuente pública de cada línea de negocio}
   \label{tab:fuentes}
@@ -99,7 +99,7 @@ país y continente.
 La Tabla~\ref{tab:uso_fuentes} indica qué datos aporta cada fuente y a qué
 parte del modelo estrella llegan.
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Datos de cada fuente y su destino en el modelo}
   \label{tab:uso_fuentes}
@@ -147,7 +147,7 @@ Además de las fuentes de transacciones, el proyecto usa las fuentes de apoyo de
 la Tabla~\ref{tab:fuentes_apoyo}. La dimensión \bd{dim_tiempo} no requiere
 fuente externa: se genera con un script SQL.
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Fuentes de apoyo y su uso en el proyecto}
   \label{tab:fuentes_apoyo}
@@ -184,7 +184,7 @@ fuente externa: se genera con un script SQL.
   \end{tabularx}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Tipo de cambio usado para expresar los montos en pesos chilenos}
   \label{tab:tipo_cambio}

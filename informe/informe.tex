@@ -30,6 +30,15 @@
 \usepackage{parskip}
 \usepackage{graphicx}
 \usepackage{float}
+% Las tablas y figuras flotan: con [H], una tabla grande que no cabía dejaba media página en blanco
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}
+\makeatletter\setlength{\@fptop}{0pt}\makeatother  % páginas de solo flotantes: alineadas arriba
 \usepackage{caption}
 \usepackage{booktabs}
 \usepackage{tabularx}
@@ -140,7 +149,7 @@
 
 % \captura[ancho]{archivo}{leyenda}: incluye docs/capturas/<archivo> si existe
 \newcommand{\captura}[3][\linewidth]{%
-  \begin{figure}[H]
+  \begin{figure}[!htbp]
     \centering
     \caption{#3}
     \IfFileExists{../docs/capturas/#2}{%

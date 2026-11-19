@@ -15,7 +15,7 @@ dirigido a la gerencia comercial y de marketing. Todos los servicios corren en
 contenedores Docker, por lo que el entorno se reproduce igual en Linux y en
 Windows.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
   \caption{Arquitectura de la solución BI por capas}
   \label{fig:arquitectura}
@@ -124,7 +124,7 @@ versiones son las instaladas en el equipo de desarrollo y quedan fijadas en
 \bd{docker-compose.yml} (imágenes de los servicios) y en
 \bd{requirements.txt} (paquetes de Python).
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Herramientas de la arquitectura por capa}
   \label{tab:herramientas}
@@ -199,7 +199,7 @@ carga completa y repetible: recrea el staging, vacía el Datawarehouse y lo
 vuelve a poblar. Los resultados de cada etapa se presentan en la sección
 Estadísticas de Procesamiento (Sección~\ref{sec:estadisticas}).
 
-\begin{table}[H]
+\begin{table}[!htbp]
   \centering
   \caption{Etapas del flujo de integración}
   \label{tab:flujo_etl}
