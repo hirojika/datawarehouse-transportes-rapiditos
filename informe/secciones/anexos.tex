@@ -87,12 +87,10 @@ python etl/ejecutar_etl.py --preparar
 pytest -v
 \end{lstlisting}
   \item Opcionalmente, regenerar el diccionario de datos del Anexo~A y las
-        capturas del informe.
+        tablas de Estadísticas de Procesamiento.
 \begin{lstlisting}[style=consola]
 python herramientas/generar_diccionario.py
 python herramientas/estadisticas_etl.py
-python -m playwright install chromium   # una sola vez
-python herramientas/capturar_pgadmin.py --avance2
 \end{lstlisting}
 \end{enumerate}
 
