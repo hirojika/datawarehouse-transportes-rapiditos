@@ -726,3 +726,9 @@ Verificación: el ETL completo terminó con código 0.
 - Se recompiló el informe (74 páginas). Ya no queda ninguna «Captura pendiente».
 - Al ejecutar `03_hechos` desde la GUI, Hop guardó el pipeline con las cajas en otras posiciones. Se restauró la versión del repositorio, la misma que aparece en la 07c. Después se volvió a correr el ETL completo: terminó con código 0, con 118.263 filas en `fact_venta` y 1.737 rechazos.
 - Se rearmó el paquete de entrega: `Avance2_Grupo1_Rapiditos.zip`, de 12,7 MB y con 36 archivos. Pasaron los 43 tests y `ruff` no reportó problemas.
+
+### 18-11-2026: la tabla de tiempos y la captura 07e salen de la misma ejecución
+
+- Se volvió a correr `python etl/ejecutar_etl.py` y se guardó su salida completa. Terminó en 18 s con código 0. El workflow tardó 15,0 s en total: 3,1 s el staging, 0,3 s las dimensiones y 10,6 s los hechos.
+- Con esa ejecución se regeneraron la captura 07e y las tablas de Estadísticas de Procesamiento (`herramientas/estadisticas_etl.py`). Así, los tiempos de la Tabla de tiempos coinciden con los que muestra la captura. Las cantidades de filas no cambiaron.
+- Se recompiló el informe y se rearmó el paquete de entrega (12,7 MB, 36 archivos).
