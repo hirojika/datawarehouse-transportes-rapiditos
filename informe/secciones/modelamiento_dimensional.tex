@@ -214,7 +214,7 @@ N°3. El rango etario se calcula a partir de \bd{edad_cliente} en el cubo.
     Frecuencia de compra      & \bd{COUNT(id_venta) / COUNT(DISTINCT id_cliente)} & P4 \\
     Gasto anual por cliente   & \bd{SUM(monto_neto) / COUNT(DISTINCT id_cliente)} por año & P3, P9 \\
     Participación por línea   & \bd{SUM(monto_neto)} de la línea / \bd{SUM(monto_neto)} total & P5, P6 \\
-    Clientes multilínea       & Clientes con \bd{COUNT(DISTINCT linea_negocio) > 1} por año & P2 \\
+    Proporción de clientes multilínea & Clientes con más de una línea en el año (\bd{COUNT(DISTINCT linea_negocio) > 1} por cliente y año) / clientes activos del año & P2 \\
     Tasa de descuento         & \bd{SUM(monto_descuento) / SUM(monto_bruto)} & P11 \\
     \bottomrule
   \end{tabularx}

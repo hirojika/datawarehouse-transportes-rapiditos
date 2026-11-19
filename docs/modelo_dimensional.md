@@ -151,7 +151,7 @@ Notas para el ETL (implementadas en el Avance N°2, 17-11-2026):
 | Frecuencia de compra | COUNT(id_venta) / COUNT(DISTINCT id_cliente) |
 | Gasto anual por cliente | SUM(monto_neto) / COUNT(DISTINCT id_cliente) por anio |
 | Participación por línea | SUM(monto_neto) de la línea / SUM(monto_neto) total |
-| Clientes multilínea | Clientes con COUNT(DISTINCT linea_negocio) > 1 por año |
+| Proporción de clientes multilínea | Clientes con COUNT(DISTINCT linea_negocio) > 1 en el año (agrupado por cliente y año) / clientes activos del año |
 | Tasa de descuento | SUM(monto_descuento) / SUM(monto_bruto) |
 
 ## 7. Norma de nomenclatura

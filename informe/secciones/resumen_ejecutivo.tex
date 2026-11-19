@@ -30,11 +30,13 @@ destino), canal de venta y medio de pago. La dimensión cliente es la que
 unifica al cliente entre las seis líneas.
 
 Como ningún dataset público identifica a un mismo cliente en varias líneas de
-transporte, el proyecto combina transacciones públicas reales de seis fuentes
-(una por línea) con una capa de clientes sintéticos residentes en Chile,
-calibrada con el Censo de Población y Vivienda 2024 del INE. Los datos
-sintéticos se identifican como tales en el código, en la base de datos y en
-este informe.
+transporte, el proyecto combina transacciones de seis datasets públicos (uno
+por línea) con una capa de clientes sintéticos residentes en Chile,
+calibrada con el Censo de Población y Vivienda 2024 del INE. No todas las
+transacciones son reales: el dataset de trenes es ficticio según su proveedor,
+y parte de las fechas y las tarifas de buses se generan o estiman en la
+preparación. Los datos sintéticos se identifican como tales en el código, en
+la base de datos y en este informe.
 
 El Avance N°1 presentó el caso de negocio, las fuentes de información, la
 arquitectura propuesta, el modelo multidimensional y el script SQL que lo

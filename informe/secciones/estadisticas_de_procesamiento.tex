@@ -47,8 +47,9 @@ Buses y trenes no tienen rechazos. En buses, la preparación ya descarta lo que
 no es una venta: despachos sin pasajeros, vehículos que no son buses (como
 automóviles o camionetas) y rutas con municipios inexistentes. En trenes, el
 dataset es ficticio y no trae registros inválidos. Delivery tiene la tasa de
-carga más baja (95,2~\%), porque el 4,7~\% de sus pedidos aparece cancelado
-en la fuente.
+carga más baja (95,2~\%), principalmente porque el 4,7~\% de sus pedidos
+(943) aparece cancelado en la fuente; los otros 19 rechazos corresponden a
+distancias y montos atípicos (Tabla~\ref{tab:est_rechazos}).
 
 \subsection{Rechazos y Calidad de Datos}
 
@@ -143,7 +144,9 @@ cubo y el dashboard desarrollarán en el Avance N°3
 (Figuras~\ref{fig:carga_ventas} y~\ref{fig:carga_indicadores}). Las ventas por
 línea y año permiten comparar el aporte de cada línea, y los indicadores por
 año calculan los KPI definidos en el modelo: clientes activos, frecuencia de
-compra, gasto anual por cliente, tasa de descuento y clientes multilínea.
+compra, gasto anual por cliente, tasa de descuento y clientes multilínea; la
+proporción de clientes multilínea se obtiene dividiendo esta última columna
+por la de clientes activos.
 
 Estas cifras deben leerse con las limitaciones de la
 Sección~\ref{sec:limitaciones}: los montos provienen de fuentes de distintos
