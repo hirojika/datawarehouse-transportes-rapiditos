@@ -714,3 +714,15 @@ Cambios:
 - Las notas de los 3 pipelines y del workflow se partieron en líneas cortas.
 
 Verificación: el ETL completo terminó con código 0.
+
+### 18-11-2026: captura 07e (ETL por línea de comandos)
+
+- Se ejecutó `python etl/ejecutar_etl.py`: terminó en 17 s con código 0, con 118.263 ventas cargadas y 1.737 rechazos.
+- La captura `07e_terminal_ejecucion_etl.png` se generó a partir del registro de esa ejecución (`data/processed/etl_hop.log`). Muestra las últimas 57 líneas en una ventana de terminal, desde el fin del staging hasta `ETL terminado ... con código 0`. Por privacidad, el usuario y el equipo aparecen como `usuario@equipo`, y la carpeta personal como `/home/usuario`. El resto del texto no se modificó.
+
+### 18-11-2026: capturas 07a a 07d (Apache Hop GUI) e informe recompilado
+
+- Las capturas se tomaron en Hop GUI con el proyecto `rapiditos` activo. Son: el workflow `principal` ejecutado, con todas sus acciones en Success (07a); los diagramas de `01_staging` (07b) y `03_hechos` (07c); y las métricas de `03_hechos` ejecutado desde la GUI (07d). En la 07d, `Cargar fact_venta` escribió 118.263 filas y `Registrar rechazo`, 1.737, igual que en la ejecución por línea de comandos.
+- Se recompiló el informe (74 páginas). Ya no queda ninguna «Captura pendiente».
+- Al ejecutar `03_hechos` desde la GUI, Hop guardó el pipeline con las cajas en otras posiciones. Se restauró la versión del repositorio, la misma que aparece en la 07c. Después se volvió a correr el ETL completo: terminó con código 0, con 118.263 filas en `fact_venta` y 1.737 rechazos.
+- Se rearmó el paquete de entrega: `Avance2_Grupo1_Rapiditos.zip`, de 12,7 MB y con 36 archivos. Pasaron los 43 tests y `ruff` no reportó problemas.

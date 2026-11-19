@@ -47,11 +47,11 @@ Hop GUI es una aplicación de escritorio y el script no la puede manejar. Prepar
 
 Capturas, guardadas en `docs/capturas/` con estos nombres:
 
-- [ ] 07a: **workflow principal ejecutado.** File > Open > `principal.hwf`. Ejecutarlo (botón ▶ Run, configuración `local`) y esperar a que termine (unos 20 s). Capturar el diagrama con los ticks verdes de cada acción y, abajo, el panel de resultados con el registro → `07a_hop_workflow_principal.png`
-- [ ] 07b: **pipeline de staging.** File > Open > `pipelines/01_staging.hpl`. Capturar el diagrama completo (5 lecturas de CSV y 5 cargas a `stg`) → `07b_hop_pipeline_staging.png`
-- [ ] 07c: **pipeline de hechos.** File > Open > `pipelines/03_hechos.hpl`. Capturar el diagrama completo: lectura, filtro de reglas, rechazos, 6 búsquedas y carga de `fact_venta` → `07c_hop_pipeline_hechos.png`
-- [ ] 07d: **métricas del pipeline de hechos.** Con `03_hechos.hpl` abierto, ejecutarlo (▶ Run, `local`). Se puede ejecutar solo: vacía `fact_venta` y `stg.rechazo` al inicio y las vuelve a llenar. Al terminar, abrir la pestaña **Transform Metrics** del panel de resultados. Capturar el diagrama y la tabla de métricas, con las 118.263 filas de `Cargar fact_venta` y las 1.737 de `Registrar rechazo` → `07d_hop_metricas_ejecucion.png`
-- [ ] 07e: **ETL por línea de comandos.** En una terminal, desde la raíz del repositorio, ejecutar `python etl/ejecutar_etl.py`. Capturar el final de la salida: las acciones del workflow con `result=[true]`, la línea `Workflow duration` y `ETL terminado ... con código 0` → `07e_terminal_ejecucion_etl.png`
+- [x] 07a: **workflow principal ejecutado.** File > Open > `principal.hwf`. Ejecutarlo (botón ▶ Run, configuración `local`) y esperar a que termine (unos 20 s). Capturar el diagrama con los ticks verdes de cada acción y, abajo, el panel de resultados con el registro → `07a_hop_workflow_principal.png`
+- [x] 07b: **pipeline de staging.** File > Open > `pipelines/01_staging.hpl`. Capturar el diagrama completo (5 lecturas de CSV y 5 cargas a `stg`) → `07b_hop_pipeline_staging.png`
+- [x] 07c: **pipeline de hechos.** File > Open > `pipelines/03_hechos.hpl`. Capturar el diagrama completo: lectura, filtro de reglas, rechazos, 6 búsquedas y carga de `fact_venta` → `07c_hop_pipeline_hechos.png`
+- [x] 07d: **métricas del pipeline de hechos.** Con `03_hechos.hpl` abierto, ejecutarlo (▶ Run, `local`). Se puede ejecutar solo: vacía `fact_venta` y `stg.rechazo` al inicio y las vuelve a llenar. Al terminar, abrir la pestaña **Transform Metrics** del panel de resultados. Capturar el diagrama y la tabla de métricas, con las 118.263 filas de `Cargar fact_venta` y las 1.737 de `Registrar rechazo` → `07d_hop_metricas_ejecucion.png`
+- [x] 07e: **ETL por línea de comandos.** En una terminal, desde la raíz del repositorio, ejecutar `python etl/ejecutar_etl.py`. Capturar el final de la salida: las acciones del workflow con `result=[true]`, la línea `Workflow duration` y `ETL terminado ... con código 0` → `07e_terminal_ejecucion_etl.png`. Se generó desde el registro real de la ejecución del 18-11-2026 (`data/processed/etl_hop.log`), con el usuario, el equipo y la ruta de la carpeta personal anonimizados
 
 ## Fases siguientes (referencia)
 - [ ] Carga de datos con Python y Apache Hop (pipelines y workflow en Hop GUI)
