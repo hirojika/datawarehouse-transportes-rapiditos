@@ -1,4 +1,4 @@
-% Generado automáticamente. No editar a mano.
+% Generado con herramientas/estadisticas_etl.py; tiempos de Hop fijados a la ejecución de la Figura 4.2 (18-11-2026 21:26).
 \begin{table}[!htbp]
   \centering
   \caption{Tiempo de ejecución por etapa}
@@ -14,11 +14,17 @@
     Preparación en Python: Logística y Distribución & 1,4 \\
     Preparación en Python: Aerolíneas & 90,6 \\
     Preparación en Python: URapid Delivery & 0,9 \\
+    \midrule
+    \textit{Subtotal preparación en Python} & \textit{97,8} \\
+    \midrule
     Hop: pipeline 01\_staging & 3,1 \\
     Hop: pipeline 02\_dimensiones & 0,3 \\
     Hop: pipeline 03\_hechos & 10,6 \\
     \midrule
-    \textbf{Workflow principal de Hop (total)} & \textbf{15,0} \\
+    \textit{Subtotal workflow principal de Hop} & \textit{15,0} \\
+    \midrule
+    \textbf{Total del ETL} & \textbf{112,8} \\
     \bottomrule
   \end{tabularx}
+  \par\smallskip\footnotesize El subtotal de Hop es la duración del workflow principal: además de los tres pipelines, ejecuta los scripts SQL de staging, de preparación de la carga y de validación. El total suma la preparación de las seis líneas y el workflow. Los tiempos de Python provienen del registro de la preparación; los de Hop, de la ejecución de la Figura~\ref{fig:etl_terminal}.
 \end{table}

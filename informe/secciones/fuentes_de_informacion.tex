@@ -112,8 +112,9 @@ parte del modelo estrella llegan.
     \midrule
     Buses InterUrbanos & Municipios de origen y destino, nivel de servicio
       (básico o lujo), pasajeros por despacho
-      & \bd{dim_zona} (origen y destino), \bd{dim_servicio}, una venta por
-        pasajero; distancia y tarifa estimadas \\
+      & \bd{dim_zona} (origen y destino), \bd{dim_tiempo},
+        \bd{dim_servicio}, una venta por pasajero; distancia y tarifa
+        estimadas \\
     Trenes & Estaciones, fecha del viaje, precio, tipo de compra (en línea o en
       estación), medio de pago, clase, tarjeta de descuento y tipo de pasaje
       & \bd{dim_zona}, \bd{dim_tiempo}, \bd{dim_canal_venta},
@@ -122,21 +123,24 @@ parte del modelo estrella llegan.
     Radio Taxis & Zonas de origen y destino, horas de inicio y fin, distancia,
       tarifa, tipo de pago, tipo de viaje (en la calle o despachado),
       pasajeros
-      & \bd{dim_zona}, \bd{dim_tiempo}, \bd{dim_canal_venta},
-        \bd{dim_medio_pago}, \bd{distancia_km}, \bd{duracion_minutos},
-        montos, \bd{cantidad} \\
+      & \bd{dim_zona}, \bd{dim_tiempo}, \bd{dim_servicio},
+        \bd{dim_canal_venta}, \bd{dim_medio_pago}, \bd{distancia_km},
+        \bd{duracion_minutos}, montos, \bd{cantidad} \\
     Logística y Distribución & Ciudad del vendedor y del comprador, flete,
       peso de los productos, ítems, tipo de pago, fechas de compra y entrega
-      & \bd{dim_zona}, montos, \bd{peso_kg}, \bd{cantidad},
-        \bd{dim_medio_pago}, \bd{distancia_km}, \bd{duracion_minutos} \\
+      & \bd{dim_zona}, \bd{dim_tiempo}, \bd{dim_servicio},
+        \bd{dim_medio_pago}, montos, \bd{peso_kg}, \bd{cantidad},
+        \bd{distancia_km}, \bd{duracion_minutos} \\
     Aerolíneas & Aeropuertos de origen y destino, tarifa, pasajeros,
       distancia, trimestre
-      & \bd{dim_zona}, \bd{dim_servicio} (alcance del vuelo), montos,
-        \bd{cantidad}, \bd{distancia_km}, \bd{dim_tiempo} \\
+      & \bd{dim_zona}, \bd{dim_tiempo}, \bd{dim_servicio}
+        (alcance del vuelo), montos, \bd{cantidad}, \bd{distancia_km} \\
     URapid Delivery & Canal, medio de pago, vouchers, monto del pedido, tarifa
       de envío, tipo de repartidor y de tienda, distancia y tiempo de entrega
-      & \bd{dim_canal_venta}, \bd{dim_medio_pago}, \bd{dim_servicio}, montos y
-        descuento, \bd{distancia_km}, \bd{duracion_minutos} \\
+      & \bd{dim_zona} (ciudad del centro de distribución de la tienda, como origen y destino), \bd{dim_tiempo},
+        \bd{dim_canal_venta}, \bd{dim_medio_pago}, \bd{dim_servicio}, montos
+        y descuento, \bd{distancia_km}, \bd{duracion_minutos}. La fuente no
+        informa peso \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -232,10 +236,16 @@ Sección~\ref{sec:limitaciones}.
         nueve ventanas de cuatro meses. El segundo semestre de 2025 de la
         aerolínea, que BTS todavía no publica, se completa con 2024 trasladado
         un año.
-  \item \textbf{Buses en 2024:} la fuente casi no tiene datos de 2024 (106 mil
-        filas, frente a 12,3 millones en 2023 y 11,7 millones en 2025). Cada
-        mes de 2024 con menos de la mitad de los pasajeros del mismo mes de
-        2023 se reemplaza por ese mes de 2023, trasladado un año.
+  \item \textbf{Buses, descarga parcial y año 2024:} el dataset completo
+        supera los 30 millones de filas (12,3 millones en 2023, 106 mil en 2024
+        y 11,7 millones en 2025) y su API tarda minutos en responder consultas
+        agregadas. Por eso se descargan solo los despachos en origen de dos
+        días fijos de cada mes, el 8 y el 22: 72 días y 1.260.343 filas, que
+        son las filas leídas de la Tabla~\ref{tab:est_lineas}. Como 2024 casi
+        no tiene datos en la fuente, cada mes de 2024 con menos de la mitad de
+        los pasajeros del mismo mes de 2023 se reemplaza por ese mes de 2023,
+        trasladado un año. En ambos casos el día de cada venta se sortea dentro
+        del mes, por lo que la fecha de los buses es sintética.
   \item \textbf{Tarifa y distancia de buses:} la fuente no trae precio. Con las
         28 rutas chilenas del SERNAC que informan precio y kilómetros por
         carretera~\cite{sernac2024} se ajustó, por mínimos cuadrados, una

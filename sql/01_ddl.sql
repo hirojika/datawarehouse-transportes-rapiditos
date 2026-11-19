@@ -270,7 +270,7 @@ COMMENT ON COLUMN dwh.fact_venta.monto_descuento IS 'Medida aditiva: descuento a
 COMMENT ON COLUMN dwh.fact_venta.monto_neto IS 'Medida aditiva: monto pagado (CLP) = bruto - descuento';
 COMMENT ON COLUMN dwh.fact_venta.distancia_km IS 'Medida aditiva: distancia recorrida en km';
 COMMENT ON COLUMN dwh.fact_venta.duracion_minutos IS 'Medida aditiva: duración del servicio en minutos';
-COMMENT ON COLUMN dwh.fact_venta.peso_kg IS 'Medida aditiva: peso en kg (solo logística y delivery)';
+COMMENT ON COLUMN dwh.fact_venta.peso_kg IS 'Medida aditiva: peso en kg (solo logística; NULL en pasajeros y en delivery, cuya fuente no informa peso)';
 
 -- Índices sobre las llaves foráneas: PostgreSQL no los crea por su cuenta y
 -- aceleran los cruces entre la tabla de hechos y las dimensiones.

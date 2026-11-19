@@ -141,7 +141,7 @@ Todas las fuentes se revisaron de nuevo antes de construir el ETL. El detalle de
 
 **Buses (Supertransporte):** trae pasajeros reales por terminal, municipio de origen y de destino, fecha, hora, clase de vehículo y nivel de servicio (básico o lujo). Limitaciones:
 - No trae precio. La tarifa se estima con un modelo (sección 5.2).
-- 2024 casi no tiene datos: 106 mil filas, frente a 12,3 millones en 2023 y 11,7 millones en 2025. Cada mes de 2024 con menos de la mitad de los pasajeros del mismo mes de 2023 se reemplaza por ese mes de 2023, trasladado un año. Ese traslado es sintético.
+- El dataset completo supera los 30 millones de filas: 12,3 millones en 2023, 106 mil en 2024 y 11,7 millones en 2025. Se descargan solo los despachos en origen del 8 y el 22 de cada mes (72 días, 1.260.343 filas). 2024 casi no tiene datos. Cada mes de 2024 con menos de la mitad de los pasajeros del mismo mes de 2023 se reemplaza por ese mes de 2023, trasladado un año. Ese traslado es sintético.
 - Trae algunas fechas inválidas (años 2202, 2222 y 6202), que quedan fuera de la extracción.
 
 ### 5.2 Fuentes de apoyo aprobadas el 17-11-2026

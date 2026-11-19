@@ -126,7 +126,7 @@ Jerarquía: comuna → ciudad → región → país → continente.
 | monto_neto | NUMERIC(12,2) | NOT NULL, CHECK = monto_bruto − monto_descuento | Aditiva |
 | distancia_km | NUMERIC(10,2) | NULL, CHECK ≥ 0 | Aditiva |
 | duracion_minutos | INTEGER | NULL, CHECK ≥ 0 | Aditiva |
-| peso_kg | NUMERIC(10,2) | NULL, CHECK ≥ 0 | Aditiva (solo logística y delivery; NULL en pasajeros) |
+| peso_kg | NUMERIC(10,2) | NULL, CHECK ≥ 0 | Aditiva (solo logística; NULL en pasajeros y en delivery, cuya fuente no informa peso) |
 
 Supuestos:
 - Montos en pesos chilenos (CLP).

@@ -17,16 +17,20 @@ de ejecución de Hop y desde la propia base.
 
 \subsection{Ejecución del Proceso}
 
-El ETL se ejecuta con un solo comando, que corre la preparación en Python y
-luego el workflow principal de Apache Hop
-(Sección~\ref{sec:flujo_etl}). La Figura~\ref{fig:hop_metricas} muestra las
+El ETL completo se ejecuta con un solo comando,
+\bd{python etl/ejecutar_etl.py --preparar}, que corre la preparación en Python
+y luego el workflow principal de Apache Hop (Sección~\ref{sec:flujo_etl});
+sin la opción \bd{--preparar}, el comando corre solo el workflow de Hop sobre
+los archivos ya preparados. La Figura~\ref{fig:hop_metricas} muestra las
 métricas de una ejecución en Apache Hop GUI: filas leídas, escritas y con
 error de cada transformación del pipeline de hechos. La
-Figura~\ref{fig:etl_terminal} muestra el final de la ejecución por línea de
-comandos, con el resultado de cada etapa del workflow.
+Figura~\ref{fig:etl_terminal} muestra el final de una ejecución del workflow
+por línea de comandos, con el resultado de cada etapa. Como la semilla de la
+preparación es fija, todas las ejecuciones cargan las mismas filas; solo
+cambian los tiempos.
 
 \captura{07d_hop_metricas_ejecucion.png}{Métricas de ejecución del pipeline \bd{03_hechos} en Apache Hop GUI\label{fig:hop_metricas}}
-\captura{07e_terminal_ejecucion_etl.png}{Ejecución del ETL completo por línea de comandos (\bd{python etl/ejecutar_etl.py})\label{fig:etl_terminal}}
+\captura{07e_terminal_ejecucion_etl.png}{Final de la ejecución del workflow de Hop por línea de comandos (\bd{python etl/ejecutar_etl.py})\label{fig:etl_terminal}}
 
 \subsection{Registros por Etapa y Línea de Negocio}
 

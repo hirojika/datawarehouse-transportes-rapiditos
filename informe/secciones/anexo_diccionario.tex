@@ -31,7 +31,7 @@ Hechos de venta: una fila por transacción de compra de un cliente. \textbf{Orig
     \bd{monto_neto} & NUMERIC(12,2) & No & CK & Medida aditiva: monto pagado (CLP) = bruto - descuento \\
     \bd{distancia_km} & NUMERIC(10,2) & Sí & CK & Medida aditiva: distancia recorrida en km \\
     \bd{duracion_minutos} & INTEGER & Sí & CK & Medida aditiva: duración del servicio en minutos \\
-    \bd{peso_kg} & NUMERIC(10,2) & Sí & CK & Medida aditiva: peso en kg (solo logística y delivery) \\
+    \bd{peso_kg} & NUMERIC(10,2) & Sí & CK & Medida aditiva: peso en kg (solo logística; NULL en pasajeros y en delivery, cuya fuente no informa peso) \\
     \bottomrule
   \end{tabularx}
 \end{table}

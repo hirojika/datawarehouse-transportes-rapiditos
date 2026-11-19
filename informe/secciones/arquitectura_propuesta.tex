@@ -191,9 +191,12 @@ La Tabla~\ref{tab:flujo_etl} resume las etapas del proceso de integración,
 construido en el Avance N°2. Las etapas 1 y 2 son scripts de Python; las
 etapas 3 a 7 forman el proyecto de integración de Apache Hop (carpeta
 \bd{etl/hop/}), que orquesta el workflow \bd{principal.hwf}
-(Figura~\ref{fig:hop_workflow}). Un solo comando,
-\bd{python etl/ejecutar_etl.py}, lee las credenciales de la base desde el
-archivo \bd{.env} y ejecuta el workflow con \bd{hop-run}. Cada ejecución es una
+(Figura~\ref{fig:hop_workflow}). El comando \bd{python etl/ejecutar_etl.py}
+lee las credenciales de la base desde el archivo \bd{.env} y ejecuta el
+workflow con \bd{hop-run} (etapas 3 a 7). Con la opción \bd{--preparar}, el
+mismo comando ejecuta antes la preparación en Python (etapa 2), por lo que
+\bd{python etl/ejecutar_etl.py --preparar} corre el proceso completo desde
+\bd{data/raw/}. Cada ejecución es una
 carga completa y repetible: recrea el staging, vacía el Datawarehouse y lo
 vuelve a poblar. Los resultados de cada etapa se presentan en la sección
 Estadísticas de Procesamiento (Sección~\ref{sec:estadisticas}).
@@ -215,10 +218,11 @@ Estadísticas de Procesamiento (Sección~\ref{sec:estadisticas}).
     2 & Preparación y clientes sintéticos & Python: \bd{preparar_datos.py} y
       \bd{clientes.py} & Muestreo, traslado de fechas a 2023--2025, tarifa de
       buses, clientes sintéticos y asignación de cada transacción a un cliente.
-      Deja cuatro archivos CSV en \bd{data/processed/} \\
+      Deja cuatro archivos CSV de datos en \bd{data/processed/} \\
     3 & Carga a staging & Hop: \bd{02_stg.sql} y pipeline \bd{01_staging} &
-      Recreación del esquema \bd{stg} y carga de los archivos preparados y de
-      las tablas de equivalencias (Figura~\ref{fig:hop_staging}) \\
+      Recreación del esquema \bd{stg}; carga de los cuatro archivos preparados
+      y de \bd{equivalencia.csv}, que viene de \bd{etl/referencias/}
+      (Figura~\ref{fig:hop_staging}) \\
     4 & Transformación & Vista \bd{stg.v_transaccion_conformada} &
       Conversión de monedas a CLP, de millas y metros a kilómetros y de gramos
       a kilogramos; traducción de los códigos de cada fuente a los del modelo;
@@ -250,6 +254,7 @@ ejecución.
 \captura{07c_hop_pipeline_hechos.png}{Pipeline \bd{03_hechos} en Apache Hop GUI: reglas de calidad, búsqueda de llaves sustitutas y carga de \bd{fact_venta}\label{fig:hop_hechos}}
 
 \subsection{Entorno de Ejecución}
+\label{sec:entorno}
 
 El archivo \bd{docker-compose.yml} define los servicios de la solución con
 imágenes de versión fija: PostgreSQL (\bd{postgres:17.11}) y pgAdmin

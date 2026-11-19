@@ -60,7 +60,7 @@
 % como el resto del texto, sin recuadros; siguen siendo pulsables en el PDF
 \hypersetup{colorlinks=true, linkcolor=black, citecolor=black,
             urlcolor=black, filecolor=black,
-            pdftitle={Informe de Avance 2: Transportes Rapiditos S.A.},
+            pdftitle={Informe de Avance N°2: Transportes Rapiditos S.A.},
             pdfauthor={Grupo 1, Inteligencia de Negocios, UTEM}}
 
 % Interlineado de 1,5, como el formato de referencia
@@ -76,6 +76,8 @@
   \do\A\do\B\do\C\do\D\do\E\do\F\do\G\do\H\do\I\do\J\do\K\do\L\do\M
   \do\N\do\O\do\P\do\Q\do\R\do\S\do\T\do\U\do\V\do\W\do\X\do\Y\do\Z
   \do0\do1\do2\do3\do4\do5\do6\do7\do8\do9}
+% Sin cortes tras «:» en las URL, para que «https:» no quede solo al final de una línea
+\mathchardef\UrlBigBreakPenalty=10000
 
 % Bibliografía con BibTeX (estilo babunsrt de babelbib): numerada en orden de
 % aparición, con los términos en español ("y", "edición", "visitado el"), las
@@ -235,7 +237,7 @@
     \vspace{0.4cm}
     {\bfseries Vista Única del Cliente en\\ Transportes Rapiditos S.A. (2023-2025)\par}
     \vspace{0.6cm}
-    {\bfseries Informe de Avance 2\par}
+    {\bfseries Informe de Avance N°2\par}
     \vspace{0.4cm}
     Caso de Negocio, Fuentes de Información, Modelo Multidimensional y\\
     Proceso ETL (Estadísticas de Procesamiento)\par
@@ -262,6 +264,8 @@
 \pagenumbering{roman}
 \tableofcontents
 \clearpage
+% Una línea más en la página, para que la última tabla no quede sola en la siguiente
+\addtocontents{lot}{\protect\enlargethispage{\baselineskip}}
 \listoftables
 \clearpage
 \listoffigures

@@ -99,7 +99,7 @@ La tabla \bd{fact_venta} registra cada transacción de compra. Contiene:
     \bd{monto_neto}       & NUMERIC(12,2)    & Aditiva    & Monto pagado (CLP): bruto menos descuento \\
     \bd{distancia_km}     & NUMERIC(10,2)    & Aditiva    & Distancia recorrida \\
     \bd{duracion_minutos} & INTEGER          & Aditiva    & Duración del servicio \\
-    \bd{peso_kg}          & NUMERIC(10,2)    & Aditiva    & Peso de la carga; solo logística y delivery \\
+    \bd{peso_kg}          & NUMERIC(10,2)    & Aditiva    & Peso de la carga; solo logística (la fuente de delivery no informa peso) \\
     \bd{edad_cliente}     & SMALLINT         & No aditiva & Edad al momento de la compra; nula para empresas \\
     \bottomrule
   \end{tabularx}
@@ -204,7 +204,7 @@ N°3. El rango etario se calcula a partir de \bd{edad_cliente} en el cubo.
   \small
   \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}
                                   >{\raggedright\arraybackslash}X
-                                  >{\raggedright\arraybackslash}p{1.9cm}@{}}
+                                  >{\raggedright\arraybackslash}p{2.2cm}@{}}
     \toprule
     \textbf{KPI} & \textbf{Cálculo} & \textbf{Preguntas} \\
     \midrule

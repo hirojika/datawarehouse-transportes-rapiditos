@@ -163,8 +163,9 @@ edad, entre otras variables.
 \label{sec:problematicas}
 
 A partir del enunciado y de los supuestos de la sección anterior, se
-identifican las problemáticas siguientes. Este avance las describe de forma
-cualitativa; su magnitud se medirá con los datos cargados en el Avance N°2.
+identifican las problemáticas siguientes. Este informe las describe de forma
+cualitativa; su magnitud se medirá en el Avance N°3, con el cubo y el
+dashboard construidos sobre los datos ya cargados en el Datawarehouse.
 
 \subsubsection{Información del Cliente Fragmentada entre Líneas de Negocio}
 
@@ -318,7 +319,8 @@ sirve sobre todo para decidir a qué segmentos dirigir campañas, descuentos y
 ofertas entre líneas, que son decisiones de mediano plazo propias de esa
 gerencia. Un perfil operacional necesitaría el detalle diario de cada línea, y
 uno ejecutivo, solo unos pocos indicadores globales; ninguno de los dos
-aprovecha la segmentación de clientes que pide el objetivo.
+aprovecha la segmentación de clientes que pide el objetivo. La
+Tabla~\ref{tab:perfil} resume las características de este perfil.
 
 \begin{table}[!htbp]
   \centering
@@ -380,9 +382,12 @@ el siguiente alcance:
 \end{itemize}
 
 El proyecto se entrega en tres avances, según la
-Tabla~\ref{tab:entregas}. Este Informe de Avance 1 incluye el caso de
+Tabla~\ref{tab:entregas}. Este Informe de Avance N°2 mantiene el caso de
 negocio, las fuentes de información, la arquitectura, el modelo
-multidimensional y el script SQL que crea su estructura, sin datos.
+multidimensional y el script SQL que crea su estructura, entregados en el
+Avance N°1, y agrega el ETL que puebla el Datawarehouse, el script con el
+Datawarehouse construido, las estadísticas de procesamiento y el seguimiento
+del proyecto.
 
 \begin{table}[!htbp]
   \centering
@@ -419,9 +424,11 @@ multidimensional y el script SQL que crea su estructura, sin datos.
         internacional, pero las zonas de origen y destino no son chilenas.
   \item \textbf{Datos agregados y estimados:} la fuente de buses informa
         pasajeros por despacho, sin precio, y DB1B informa el trimestre del
-        pasaje. Cada pasajero de bus se convierte en una venta, el día se asigna
-        de forma sintética y la tarifa se estima con precios chilenos del
-        SERNAC.
+        pasaje. Cada pasajero de bus se convierte en una venta y su tarifa se
+        estima con precios chilenos del SERNAC. En ambas fuentes el día de la
+        venta se asigna de forma sintética: dentro del mes en los buses, cuyos
+        datos se descargan solo para dos días por mes, y dentro del trimestre
+        en DB1B.
   \item \textbf{Períodos distintos:} las fuentes que no cubren 2023--2025 se
         trasladan a ese período. Los buses de 2024, casi ausentes en la fuente,
         y el segundo semestre de 2025 de la aerolínea, todavía no publicado, se
