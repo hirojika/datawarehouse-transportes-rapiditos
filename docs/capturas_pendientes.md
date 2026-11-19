@@ -34,7 +34,7 @@ La versión corregida ya está probada:
 - ninguna línea pasa sobre una tabla;
 - doble resolución.
 
-Se genera con `python herramientas/capturar_pgadmin.py --solo-figura`, que no ejecuta el DDL ni rehace las otras capturas.
+Se genera desde pgAdmin, sin volver a ejecutar el DDL ni rehacer las otras capturas.
 
 ### Opción B: a mano en pgAdmin
 
@@ -61,7 +61,7 @@ Se genera con `python herramientas/capturar_pgadmin.py --solo-figura`, que no ej
 
    Así la imagen sale con más píxeles.
 7. Capturar solo el área de las tablas, sin la barra del ERD ni el árbol. No usar el botón *Download image*, porque pierde las líneas.
-8. Guardarla como `docs/diagramas/esquema_estrella.png` y avisar. **Después de eso no hay que ejecutar `herramientas/capturar_pgadmin.py`**, porque sobrescribe esta figura.
+8. Guardarla como `docs/diagramas/esquema_estrella.png` y avisar. **Después de eso no hay que regenerar la figura automáticamente**, porque se sobrescribiría.
 
 Limitación de la opción B: pgAdmin parte algunos tipos largos en dos líneas dentro de los recuadros (por ejemplo, "character var / ying(20)"). Se acepta.
 

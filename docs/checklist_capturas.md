@@ -8,7 +8,7 @@ El informe LaTeX (`informe/secciones/modelamiento_dimensional.tex`) incluye esta
 
 Las capturas de XAMPP y phpMyAdmin de la versión MariaDB se eliminaron el 04-11-2026, con la migración a PostgreSQL. Quedan en el commit `edb900e`.
 
-Las capturas 02, 03 y 05a–05e, y la figura del esquema, se generan con `python herramientas/capturar_pgadmin.py`, que maneja el pgAdmin real con un navegador sin interfaz. Hay que volver a ejecutarlo cada vez que cambie `sql/01_ddl.sql` o `sql/99_validacion.sql`. La 01 y la 04 son capturas de pantalla del grupo, y el script no las toca. El estado de lo pendiente está en `docs/capturas_pendientes.md`.
+Las capturas 02, 03 y 05a–05e, y la figura del esquema, se toman en pgAdmin con el script ejecutado. Hay que repetirlas cada vez que cambie `sql/01_ddl.sql` o `sql/99_validacion.sql`. La 01 y la 04 son capturas de pantalla del grupo. El estado de lo pendiente está en `docs/capturas_pendientes.md`.
 
 - [x] 01: `docker compose ps`, mostrando `postgres` (healthy) y `pgadmin` activos → `01_docker_servicios_activos.png`. Captura real de la terminal, hecha por el grupo el 05-11-2026
 - [x] 02: Query Tool de pgAdmin con `sql/01_ddl.sql` ejecutado. En la pestaña **Messages** se ven `COMMIT` y "Query returned successfully" → `02_pgadmin_ddl_ejecutado.png`
@@ -27,7 +27,7 @@ El informe incluye estas capturas con estos nombres exactos (capítulos Arquitec
 
 ### Capturas de pgAdmin (las genera el script)
 
-`python herramientas/capturar_pgadmin.py --avance2` ejecuta en pgAdmin cada consulta de `sql/98_consultas_carga.sql` con el DWH poblado y guarda su resultado. No modifica la base. Hay que repetirlo después de la ejecución final del ETL.
+Las capturas 06a–06f muestran en pgAdmin el resultado de cada consulta de `sql/98_consultas_carga.sql` con el DWH poblado. Las consultas no modifican la base. Hay que repetirlo después de la ejecución final del ETL.
 
 - [x] 06a: filas por tabla → `06a_carga_filas_por_tabla.png`
 - [x] 06b: transacciones en staging, rechazadas y cargadas por línea → `06b_carga_por_linea.png`

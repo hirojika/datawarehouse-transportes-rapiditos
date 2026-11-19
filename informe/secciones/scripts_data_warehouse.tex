@@ -41,10 +41,6 @@ Datawarehouse construido (Sección~\ref{sec:scripts_avance2}).
     \bd{tests/test_carga.py} y \bd{tests/test_preparar.py} & 14 pruebas de la
       consistencia de la carga y de la preparación de datos (Avance N°2) \\
     \bd{docker-compose.yml} & Define los servicios PostgreSQL 17 y pgAdmin 4 \\
-    \bd{herramientas/capturar_pgadmin.py} & Ejecuta el script y la validación
-      en pgAdmin y toma las capturas del informe \\
-    \bd{herramientas/generar_diccionario.py} & Genera el diccionario de datos
-      del Anexo~A desde el catálogo de la base \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -222,9 +218,6 @@ ejecuta el workflow principal de Apache Hop
     \bd{etl/} & Proyecto de integración: scripts de Python (\bd{etl/python/}),
       proyecto de Apache Hop (\bd{etl/hop/}), catálogos y equivalencias
       (\bd{etl/referencias/}) y el ejecutor \bd{etl/ejecutar_etl.py} \\
-    \bd{herramientas/estadisticas_etl.py} & Genera las tablas de la sección
-      Estadísticas de Procesamiento desde el registro de Hop y la base \\
-    \bd{herramientas/exportar_dwh.py} & Genera \bd{05_datos_dwh.sql} \\
     \bottomrule
   \end{tabularx}
 \end{table}

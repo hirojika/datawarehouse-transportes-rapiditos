@@ -1,6 +1,6 @@
 % =============================================================================
 % Capítulo 4: Estadísticas de Procesamiento (nombre literal del enunciado)
-% Avance N°2. Las tablas las genera herramientas/estadisticas_etl.py desde el
+% Avance N°2. Las tablas se generan automáticamente desde el
 % registro de Apache Hop y la base, después de la ejecución final del ETL.
 % =============================================================================
 \section{Estadísticas de Procesamiento}
@@ -12,9 +12,8 @@ al staging, cuántos se rechazaron y por qué, cuántos se cargaron en el modelo
 estrella y cuánto tardó cada etapa. Las cifras corresponden a la ejecución
 final del ETL, hecha con el comando \bd{python etl/ejecutar_etl.py
 --preparar} sobre PostgreSQL 17.11 y Apache Hop 2.20.0. Las tablas de este
-capítulo no se escriben a mano: las genera el script
-\bd{herramientas/estadisticas_etl.py} desde el registro de ejecución de Hop y
-desde la propia base.
+capítulo no se escriben a mano: se generan automáticamente desde el registro
+de ejecución de Hop y desde la propia base.
 
 \subsection{Ejecución del Proceso}
 

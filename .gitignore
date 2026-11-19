@@ -17,7 +17,7 @@ informe/*.fdb_latexmk
 informe/*.synctex.gz
 informe/*.xdv
 
-# Paquete de entrega (se regenera con herramientas/empaquetar_entrega.py)
+# Paquete de entrega (se regenera en cada avance)
 entrega/
 
 # Material del curso (enunciado y diapositivas del profesor): no se publica

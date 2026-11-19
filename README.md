@@ -72,8 +72,7 @@ El ETL tiene dos partes: Python prepara los datos (`etl/python/`) y Apache Hop l
 
    Cada ejecución recrea el esquema `stg`, vacía el `dwh` y lo vuelve a poblar. El workflow termina con `sql/04_validar_carga.sql`, que falla si alguna transacción se pierde o si los montos por línea no cuadran. El registro de Hop queda en `data/processed/etl_hop.log`.
 3. **Hop GUI.** `python etl/abrir_hop_gui.py` registra el proyecto `rapiditos` y abre Hop GUI con las credenciales de `.env`.
-4. **Estadísticas de Procesamiento.** `python herramientas/estadisticas_etl.py` genera las tablas del capítulo en `informe/secciones/estadisticas/`.
-5. **DWH construido.** `python herramientas/exportar_dwh.py` genera `data/processed/05_datos_dwh.sql`, con los datos de las 7 tablas, para cargarlos sin Hop después de `01_ddl.sql`. No se versiona, porque contiene datos derivados de Delivery Center.
+4. **DWH construido.** El paquete de entrega incluye `05_datos_dwh.sql`, con los datos de las 7 tablas, para cargarlos sin Hop después de `01_ddl.sql`. No se versiona, porque contiene datos derivados de Delivery Center.
 
 `sql/98_consultas_carga.sql` tiene consultas de verificación del DWH poblado: filas por tabla, rechazos, conciliación e indicadores.
 
@@ -84,35 +83,6 @@ Con los contenedores activos y el venv activado:
 ```bash
 pytest -v        # DDL en rapiditos_test (la crea y la borra); la carga se revisa en rapiditos, solo lectura
 ruff check .
-```
-
-## Capturas para el informe
-
-`herramientas/capturar_pgadmin.py` genera las capturas 02, 03 y 05a–05e del Avance N°1 en `docs/capturas/`, y la figura del esquema en `docs/diagramas/esquema_estrella.png`, que sobrescribe. La 01 (terminal) y la 04 (ERD con la interfaz) son capturas del grupo, y el script no las toca. Maneja el pgAdmin real con un navegador sin interfaz (Playwright y Chromium), usando un usuario de pgAdmin propio que se crea y se borra en cada ejecución. Por eso no altera tu espacio de trabajo en pgAdmin.
-
-```bash
-python -m playwright install chromium   # una sola vez: descarga el navegador
-python herramientas/capturar_pgadmin.py
-```
-
-El script vuelve a ejecutar `01_ddl.sql`. Si alguna tabla de `dwh` ya tiene datos, se detiene sin tocar nada.
-
-Avance N°2: `python herramientas/capturar_pgadmin.py --avance2` genera las capturas 06a–06f con las consultas de `sql/98_consultas_carga.sql` sobre el DWH poblado, sin modificarlo. Las capturas de Hop GUI (07a–07e) las hace el grupo, con las instrucciones de `docs/checklist_capturas.md`.
-
-## Diccionario de datos del informe
-
-`herramientas/generar_diccionario.py` lee el catálogo de PostgreSQL (tipos, nulos, llaves, `CHECK` y comentarios `COMMENT ON`) y escribe el Anexo A del informe en `informe/secciones/anexo_diccionario.tex`. Hay que volver a ejecutarlo cada vez que cambie `sql/01_ddl.sql`; el archivo generado no se edita a mano.
-
-```bash
-python herramientas/generar_diccionario.py
-```
-
-## Paquete de entrega
-
-`herramientas/empaquetar_entrega.py` arma `entrega/Avance1_Grupo1_Rapiditos.zip` con lo que se sube a la plataforma del curso: el informe en PDF, `01_ddl.sql`, el esquema estrella, `99_validacion.sql`, la guía para Windows y un `LEEME.txt` que indica a qué entregable corresponde cada archivo. Antes hay que compilar el informe y la guía. El script comprueba que cada archivo del zip sea idéntico a su origen. La carpeta `entrega/` no se versiona, porque se regenera.
-
-```bash
-python herramientas/empaquetar_entrega.py
 ```
 
 ## Informe y dashboard

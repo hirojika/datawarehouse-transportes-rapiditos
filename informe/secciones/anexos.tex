@@ -11,9 +11,8 @@ Este anexo describe cada columna del esquema \bd{dwh}: tipo de dato, si admite
 nulos, las llaves y reglas en que participa (PK: llave primaria; FK: llave
 foránea; UQ: valor único; CK: regla \bd{CHECK}) y su descripción. Las
 descripciones son los comentarios \bd{COMMENT ON} del propio script, y el
-anexo se genera desde el catálogo de PostgreSQL con
-\bd{herramientas/generar_diccionario.py}, por lo que coincide con la base
-creada.
+anexo se genera automáticamente desde el catálogo de PostgreSQL, por lo que
+coincide con la base creada.
 
 \input{secciones/anexo_diccionario}
 
@@ -86,12 +85,6 @@ python etl/python/descargar_fuentes.py   # más las descargas manuales de data/L
 python etl/ejecutar_etl.py --preparar
 pytest -v
 \end{lstlisting}
-  \item Opcionalmente, regenerar el diccionario de datos del Anexo~A y las
-        tablas de Estadísticas de Procesamiento.
-\begin{lstlisting}[style=consola]
-python herramientas/generar_diccionario.py
-python herramientas/estadisticas_etl.py
-\end{lstlisting}
 \end{enumerate}
 
 \subsection{Anexo C: Repositorio del Proyecto}
@@ -105,7 +98,7 @@ público de GitHub:
 \end{center}
 
 El repositorio reúne los scripts del Datawarehouse, las pruebas automáticas,
-las herramientas de apoyo, la documentación del diseño y las fuentes de este
+la documentación del diseño y las fuentes de este
 informe, de modo que cualquier persona puede revisar o reproducir el trabajo.
 Cada entrega se registra en Git con un commit descriptivo, y el archivo
 \bd{docs/bitacora.md} documenta, con fecha, cada decisión, cambio y
@@ -141,10 +134,6 @@ Tabla~\ref{tab:repositorio} describe el contenido del repositorio.
       Windows, con las referencias en \bd{referencias.bib} \\
     \bd{tests/} & Pruebas automáticas del script del Datawarehouse, de la
       preparación de datos y de la carga (pytest) \\
-    \bd{herramientas/} & Captura automatizada de pgAdmin, generación del
-      diccionario de datos (Anexo~A) y de las estadísticas de procesamiento,
-      exportación del Datawarehouse construido y armado del paquete de
-      entrega \\
     \bd{docker-compose.yml}, \bd{docker/} & Definición de los servicios
       PostgreSQL 17 y pgAdmin 4, con versiones fijas \\
     \bd{requirements.txt}, \bd{.env.example} & Dependencias de Python con

@@ -739,3 +739,9 @@ Verificación: el ETL completo terminó con código 0.
 - El Anexo C ahora aclara que el repositorio es trabajo de todo el grupo: los demás integrantes enviaron fuentes, información y mejoras al administrador del repositorio, que las incorporó, aunque los commits aparezcan solo a su nombre.
 - Se quitó Playwright de la Tabla 3.1 (herramientas de la arquitectura).
 - Se quitaron las menciones restantes a Playwright del informe: la tabla de scripts del capítulo 6 y los pasos opcionales del Anexo B.
+
+### 18-11-2026: la carpeta de herramientas de apoyo queda fuera del repositorio
+
+- `herramientas/` ya no se versiona: se excluye en `.git/info/exclude` y se quitó del índice con `git rm --cached`. Los scripts siguen en la copia local del proyecto.
+- Se quitaron de `requirements.txt` `playwright` y `greenlet`, que solo usaba la captura automatizada.
+- El informe, el README y `docs/` ya no nombran esa carpeta: se quitaron sus filas de las tablas de scripts (capítulo 6) y de contenido del repositorio (Anexo C), y el paso opcional del Anexo B. El diccionario de datos y las tablas de estadísticas se describen ahora como generados automáticamente. El informe compila (66 páginas), pasan los 43 tests y el paquete de entrega se rearma sin cambios en su contenido.
